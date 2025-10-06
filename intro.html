@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Introducción a PHP — Manual</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ </header>
+<h1>Introducción a PHP</h1>
+<p class="lead">
+  PHP es un lenguaje de programación <strong>del lado del servidor</strong> diseñado para generar contenido web dinámico.
+  Aquí tenés un resumen claro de qué es, cómo funciona y ejemplos básicos para usar en clase.
+</p>
+
+<div class="nota">
+  <strong>Formato:</strong> este es un manual en HTML plano — teoría y ejemplos listos para imprimir o proyectar.
+</div>
+
+<h2>¿Qué es PHP?</h2>
+<ul>
+  <li><strong>PHP</strong> (PHP: Hypertext Preprocessor) es un lenguaje servidor orientado a la web.</li>
+  <li>Se ejecuta en el servidor y genera HTML (u otros formatos) que llega al navegador.</li>
+  <li>Ideal para formularios, gestión de sesiones, acceso a bases de datos y lógica de negocio en páginas web.</li>
+</ul>
+
+<h2>¿Cómo funciona (visión general)?</h2>
+<ol>
+  <li>El navegador hace una petición HTTP al servidor (por ejemplo, solicita <code>/index.php</code>).</li>
+  <li>El servidor web (Apache, Nginx, PHP-FPM, o el servidor embebido de PHP) detecta que el archivo debe pasar por PHP.</li>
+  <li>El intérprete PHP ejecuta el script: corre el código entre <code>&lt;?php ?&gt;</code>, genera salida (HTML, JSON, etc.).</li>
+  <li>El servidor devuelve la respuesta HTTP al navegador con el contenido generado.</li>
+</ol>
+
+<h2>Archivo .php vs .html</h2>
+<table>
+  <tr><th>.php</th><th>.html</th></tr>
+  <tr>
+    <td>Procesado por el motor PHP → puede contener código PHP que se ejecuta en el servidor.</td>
+    <td>Entregado tal cual por el servidor; el navegador recibe exactamente el contenido del archivo.</td>
+  </tr>
+  <tr>
+    <td>Usar cuando hay lógica dinámica (formularios, sesiones, BD).</td>
+    <td>Usar para contenido estático (páginas que no necesitan procesamiento).</td>
+  </tr>
+</table>
+
+<h2>Etiquetas PHP</h2>
+<p>La forma recomendada de abrir código PHP es:</p>
+<pre class="ejemplo">
+&lt;?php
+// código PHP aquí
+?&gt;
+</pre>
+<p class="nota">No uses las short tags <code>&lt;? ... ?&gt;</code> porque dependen de la configuración del servidor (<code>short_open_tag</code>).</p>
+
+<h2>Ejemplo mínimo — "Hola mundo"</h2>
+<pre class="ejemplo">
+&lt;?php
+echo "Hola desde PHP!";
+?&gt;
+</pre>
+
+<h2>Ejemplo — PHP embebido en HTML</h2>
+<pre class="ejemplo">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+  &lt;h1&gt;&lt;?php echo "Bienvenido"; ?&gt;&lt;/h1&gt;
+  &lt;p&gt;Hoy es &lt;?php echo date('d/m/Y'); ?&gt;&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<h2>Request → respuesta: manejo de formularios (esquema)</h2>
+<pre class="ejemplo">
+&lt;!-- form.html (cliente) --&gt;
+&lt;form action="procesar.php" method="post"&gt;
+  &lt;input name="usuario" required&gt;
+  &lt;button type="submit"&gt;Enviar&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;?php
+// procesar.php (servidor)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $usuario = trim($_POST['usuario'] ?? '');
+  echo "Hola, " . htmlspecialchars($usuario, ENT_QUOTES, 'UTF-8');
+}
+?&gt;
+</pre>
+
+<h2>¿Cómo probar PHP en local?</h2>
+<ul>
+  <li>Instalá XAMPP / MAMP / LAMP (vienen con Apache + PHP + MySQL) y colocá archivos en <code>htdocs</code> / <code>public</code>.</li>
+  <li>O usá el servidor embebido de PHP para pruebas: <code>php -S localhost:8000 -t public</code> desde la carpeta del proyecto.</li>
+  <li>Abrí <code>http://localhost/tu-archivo.php</code> en el navegador.</li>
+</ul>
+
+<h2>Interacción con bases de datos</h2>
+<p>PHP se conecta a bases de datos (MySQL, PostgreSQL, SQLite...) mediante extensiones como <code>PDO</code> o <code>mysqli</code>. Siempre usá consultas preparadas para evitar inyección SQL.</p>
+
+<h2>Superglobales y ciclo de vida</h2>
+<p>PHP expone arrays globales útiles: <code>$_GET</code>, <code>$_POST</code>, <code>$_SESSION</code>, <code>$_FILES</code>, <code>$_SERVER</code>, etc. Se cargan durante la petición y se pierden al finalizarla (excepto sesiones, que persisten en servidor).</p>
+
+<h2>Buenas prácticas rápidas</h2>
+<ul>
+  <li>Separá presentación y lógica (usar includes, o mejor: patrón MVC si el proyecto crece).</li>
+  <li>Usá <code>require_once</code> para archivos esenciales (config, autoload).</li>
+  <li>Escapá siempre la salida: <code>htmlspecialchars($valor, ENT_QUOTES, 'UTF-8')</code>.</li>
+  <li>Usá <code>password_hash</code> y <code>password_verify</code> para contraseñas.</li>
+  <li>Usá consultas parametrizadas (PDO) para consultas a BD.</li>
+  <li>No muestres errores SQL/stacktraces en producción; activá logs en su lugar.</li>
+</ul>
+
+<h2>Composer y gestión de dependencias</h2>
+<p>Composer es el gestor de paquetes para PHP. Permite autoload, instalar librerías (PSR-4, frameworks) y manejar versiones.</p>
+<pre class="ejemplo">
+# instalar composer (si no está)
+php -r "copy('https://getcomposer.org/installer','composer-setup.php');"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+
+# ejemplo: instalar dotenv
+composer require vlucas/phpdotenv
+</pre>
+
+<h2>Seguridad — puntos clave</h2>
+<ul>
+  <li>Sanitizar y validar todo input.</li>
+  <li>Evitar inyección SQL (prepared statements).</li>
+  <li>Proteger contra CSRF en formularios (tokens).</li>
+  <li>Usar HTTPS (TLS) para datos sensibles.</li>
+  <li>Principio de menor privilegio para la cuenta DB.</li>
+</ul>
+
+<h2>Recursos rápidos</h2>
+<ul>
+  <li>Documentación oficial: <code>php.net</code>.</li>
+  <li>OWASP Cheat Sheets (seguridad web).</li>
+  <li>Composer & PSR para estandarizar proyectos.</li>
+</ul>
+
+<h2>Resumen (en frase)</h2>
+<p>
+  PHP es un lenguaje servidor que procesa peticiones, ejecuta código en el servidor y devuelve contenido dinámico al navegador — ideal para construir aplicaciones web con interacción, sesiones y acceso a datos.
+</p>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+
+</footer>
+</body>
+</html>

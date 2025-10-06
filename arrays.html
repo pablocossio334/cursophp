@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>PHP — Arrays (Temas Generales)</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <header>
+  <a href="index.html"><img src="logo.png" alt=""></a>
+ 
+</header>
+
+<h1>PHP — Arrays (Temas Generales)</h1>
+<p>
+  En PHP, un <strong>array</strong> es una estructura que almacena múltiples valores en una sola variable.
+  Internamente es un <em>mapa ordenado</em>: las claves pueden ser <strong>enteras</strong> (indexado) o <strong>strings</strong> (asociativo).
+</p>
+
+<div class="nota">
+  Este documento es el <strong>marco general</strong>. La idea es usarlo como base y luego crear
+  páginas/temas específicos (p. ej., “Arrays asociativos”, “Funciones de arrays”, “Arrays multidimensionales”, etc.).
+</div>
+
+<!-- Índice -->
+<h2>Índice general</h2>
+<ul class="toc">
+  <li><a href="#tipos">Tipos de arrays</a></li>
+  <li><a href="#sintaxis">Sintaxis básica</a></li>
+  <li><a href="#operaciones">Operaciones comunes</a></li>
+  <li><a href="#recorrido">Recorrido e iteración</a></li>
+  <li><a href="#funciones">Funciones útiles de arrays</a></li>
+  <li><a href="#multidimensionales">Arrays multidimensionales</a></li>
+  <li><a href="#buenas-practicas">Buenas prácticas</a></li>
+  <li><a href="#errores-comunes">Errores comunes</a></li>
+  <li><a href="#ejercicios">Ejercicios sugeridos</a></li>
+  <li><a href="#proximos-temas">Próximos temas específicos</a></li>
+</ul>
+
+<!-- Tipos -->
+<h2 id="tipos">Tipos de arrays</h2>
+<table>
+  <tr><th>Tipo</th><th>Descripción</th><th>Ejemplo (clave ⇒ valor)</th></tr>
+  <tr>
+    <td>Indexado</td>
+    <td>Claves enteras automáticas (0..n)</td>
+    <td><code>[0 ⇒ "manzana", 1 ⇒ "banana", 2 ⇒ "naranja"]</code></td>
+  </tr>
+  <tr>
+    <td>Asociativo</td>
+    <td>Claves tipo string</td>
+    <td><code>["nombre" ⇒ "Pablo", "edad" ⇒ 30]</code></td>
+  </tr>
+  <tr>
+    <td>Multidimensional</td>
+    <td>Arrays dentro de arrays</td>
+    <td><code>[ ["nombre" ⇒ "Ana"], ["nombre" ⇒ "Luis"] ]</code></td>
+  </tr>
+</table>
+
+<!-- Sintaxis -->
+<h2 id="sintaxis">Sintaxis básica</h2>
+<h3>Creación</h3>
+<pre class="ejemplo">
+&lt;?php
+// Indexado
+$frutas = ["manzana", "banana", "naranja"];
+
+// Asociativo
+$persona = [
+  "nombre" =&gt; "Pablo",
+  "edad"   =&gt; 30,
+  "rol"    =&gt; "docente"
+];
+?&gt;
+</pre>
+
+<h3>Acceso por clave/índice</h3>
+<pre class="ejemplo">
+&lt;?php
+echo $frutas[0];        // manzana
+echo $persona["edad"];  // 30
+?&gt;
+</pre>
+
+<!-- Operaciones -->
+<h2 id="operaciones">Operaciones comunes</h2>
+<pre class="ejemplo">
+&lt;?php
+$colores = ["rojo", "verde"];
+
+// Agregar al final
+$colores[] = "azul"; // ["rojo","verde","azul"]
+
+// Reasignar por índice
+$colores[1] = "amarillo"; // ["rojo","amarillo","azul"]
+
+// Eliminar (deja "hueco" si quitás por índice)
+unset($colores[0]); // [1 =&gt; "amarillo", 2 =&gt; "azul"]
+?&gt;
+</pre>
+<p><span class="pill">Nota</span> Después de <code>unset()</code>, las claves no se reindexan automáticamente. Podés usar <code>array_values()</code> si necesitás reindexar.</p>
+
+<!-- Recorrido -->
+<h2 id="recorrido">Recorrido e iteración</h2>
+<h3>foreach (solo valores)</h3>
+<pre class="ejemplo">
+&lt;?php
+$frutas = ["manzana","banana","naranja"];
+foreach ($frutas as $f) {
+  echo $f . "\n";
+}
+?&gt;
+</pre>
+
+<h3>foreach (clave y valor)</h3>
+<pre class="ejemplo">
+&lt;?php
+$persona = ["nombre" =&gt; "Pablo", "edad" =&gt; 30];
+foreach ($persona as $clave =&gt; $valor) {
+  echo $clave . ": " . $valor . "\n";
+}
+?&gt;
+</pre>
+
+<!-- Funciones útiles -->
+<h2 id="funciones">Funciones útiles de arrays</h2>
+<table>
+  <tr><th>Función</th><th>Descripción</th><th>Ejemplo</th></tr>
+  <tr><td><code>count()</code></td><td>Cantidad de elementos</td><td><code>count($arr)</code></td></tr>
+  <tr><td><code>in_array()</code></td><td>Busca un valor</td><td><code>in_array("rojo",$arr)</code></td></tr>
+  <tr><td><code>array_push()</code> / <code>array_pop()</code></td><td>Agregar/retirar al final</td><td><code>array_push($a,"x")</code></td></tr>
+  <tr><td><code>array_unshift()</code> / <code>array_shift()</code></td><td>Agregar/retirar al inicio</td><td><code>array_shift($a)</code></td></tr>
+  <tr><td><code>array_keys()</code> / <code>array_values()</code></td><td>Obtener claves/valores</td><td><code>array_keys($obj)</code></td></tr>
+  <tr><td><code>sort()</code> / <code>rsort()</code></td><td>Ordenar indexados</td><td><code>sort($a)</code></td></tr>
+  <tr><td><code>asort()</code> / <code>arsort()</code></td><td>Ordenar preservando claves</td><td><code>asort($a)</code></td></tr>
+  <tr><td><code>ksort()</code> / <code>krsort()</code></td><td>Ordenar por clave</td><td><code>ksort($a)</code></td></tr>
+  <tr><td><code>array_merge()</code></td><td>Fusionar arrays</td><td><code>array_merge($a,$b)</code></td></tr>
+  <tr><td><code>array_filter()</code></td><td>Filtrar con callback</td><td><code>array_filter($a, fn($x)=&gt;$x&gt;10)</code></td></tr>
+  <tr><td><code>array_map()</code></td><td>Transformar con callback</td><td><code>array_map('strtoupper',$a)</code></td></tr>
+  <tr><td><code>array_reduce()</code></td><td>Reducir a un valor</td><td><code>array_reduce($a, fn($c,$x)=&gt;$c+$x, 0)</code></td></tr>
+</table>
+
+<!-- Multidimensionales -->
+<h2 id="multidimensionales">Arrays multidimensionales</h2>
+<pre class="ejemplo">
+&lt;?php
+$alumnos = [
+  ["nombre" =&gt; "Ana",  "nota" =&gt; 9],
+  ["nombre" =&gt; "Luis", "nota" =&gt; 8],
+];
+
+echo $alumnos[0]["nombre"]; // Ana
+
+// Recorrer
+foreach ($alumnos as $alumno) {
+  echo $alumno["nombre"] . " - " . $alumno["nota"] . "\n";
+}
+?&gt;
+</pre>
+
+<!-- Buenas prácticas -->
+<h2 id="buenas-practicas">Buenas prácticas</h2>
+<ul>
+  <li>Elegí nombres de claves claros (en asociativos).</li>
+  <li>Preferí <code>foreach</code> para recorrer; es más legible.</li>
+  <li>Reindexá si necesitás índices consecutivos tras <code>unset()</code> usando <code>array_values()</code>.</li>
+  <li>Para colecciones complejas, considerá clases/objetos en lugar de arrays anidados muy profundos.</li>
+  <li>Usá funciones de arrays (evitá reinventar la rueda).</li>
+</ul>
+
+<!-- Errores comunes -->
+<h2 id="errores-comunes">Errores comunes</h2>
+<ul>
+  <li>Acceder a una clave/índice que no existe (avisar con <code>isset()</code> o <code>array_key_exists()</code>).</li>
+  <li>Confundir <code>sort()</code> (reindexa) con <code>asort()</code> (preserva claves).</li>
+  <li>Olvidar que <code>unset()</code> no reindexa.</li>
+  <li>Mezclar sin control tipos de claves (enteras/strings) en el mismo array.</li>
+</ul>
+
+<!-- Ejercicios -->
+<h2 id="ejercicios">Ejercicios sugeridos</h2>
+<ol>
+  <li>Crear un array indexado de 5 colores y ordenarlo alfabéticamente.</li>
+  <li>Crear un array asociativo de “alumno” con nombre, edad y promedio; imprimir “clave: valor”.</li>
+  <li>Armar un array multidimensional de productos (nombre, precio) y calcular el total con <code>array_reduce()</code>.</li>
+  <li>Filtrar de un array de números solo los pares usando <code>array_filter()</code>.</li>
+</ol>
+
+<!-- Próximos temas -->
+<h2 id="proximos-temas">Próximos temas específicos (para nuevas páginas)</h2>
+<ul>
+  <li>Arrays asociativos en profundidad (búsqueda, actualización de claves).</li>
+  <li>Ordenamiento avanzado (por valores, por claves, criterios personalizados con <code>usort()</code>, <code>uasort()</code>, <code>uksort()</code>).</li>
+  <li>Arrays multidimensionales: patrones de acceso y modificación.</li>
+  <li>Funciones de arrays “pro” (<code>array_column</code>, <code>array_unique</code>, <code>array_diff</code>, <code>array_intersect</code>).</li>
+  <li>Inmutabilidad práctica: crear nuevos arrays sin modificar los originales.</li>
+  <li>Rendimiento y memoria con arrays grandes.</li>
+</ul>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+
+</footer>
+</body>
+</html>

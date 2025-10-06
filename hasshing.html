@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PHP — Encriptación y Hashing</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+<h1>Encriptación y Hashing en PHP</h1>
+
+<p>
+  En seguridad, “encriptar” no es lo mismo que “hashear”. Este manual resume <strong>cuándo usar cada cosa</strong>,
+  cómo hacerlo correctamente en PHP y las <strong>buenas prácticas</strong> mínimas.
+</p>
+
+<div class="nota">
+  <strong>Atajo mental:</strong> 
+  <em>Hash</em> → solo verificar (no se revierte). 
+  <em>Encriptación</em> → ocultar y luego recuperar (reversible con clave).
+</div>
+
+<h2>Índice</h2>
+<ul class="toc">
+  <li><a href="#hashing">Hashing (contraseñas)</a></li>
+  <li><a href="#simetrica">Encriptación simétrica (una clave)</a></li>
+  <li><a href="#libsodium">Encriptación moderna con libsodium</a></li>
+  <li><a href="#aleatorios">Aleatoriedad segura</a></li>
+  <li><a href="#buenas">Buenas prácticas</a></li>
+  <li><a href="#errores">Errores comunes</a></li>
+</ul>
+
+<!-- Hashing -->
+<h2 id="hashing">Hashing (contraseñas)</h2>
+<p>
+  Para almacenar contraseñas <strong>no se encripta</strong>, se usa <strong>hash con sal y factor de costo</strong>. 
+  En PHP: <code>password_hash()</code> y <code>password_verify()</code> (manejan sal y costo por vos).
+</p>
+
+<pre class="ejemplo">
+&lt;?php
+$clavePlano = "Secreta.123";
+
+// Crear hash (BCrypt/Argon2 según tu PHP)
+$hash = password_hash($clavePlano, PASSWORD_DEFAULT);
+
+// Guardá $hash en BD (no guardes la clave en texto)
+echo $hash . "\n";
+
+// Verificar al loguear:
+$ok = password_verify("Secreta.123", $hash);
+echo $ok ? "✅ Coincide" : "❌ No coincide";
+?&gt;
+</pre>
+
+<p><strong>Tips:</strong> Usá <code>PASSWORD_DEFAULT</code> y permití rehash con <code>password_needs_rehash()</code> si cambia el costo/algoritmo.</p>
+
+<!-- Simétrica -->
+<h2 id="simetrica">Encriptación simétrica (una clave)</h2>
+<p>
+  Para datos que necesitás <strong>recuperar</strong> (ej. DNI cifrado, tokens temporales), usá encriptación simétrica.
+  Con OpenSSL: elegí AES-256 en modo AEAD (GCM) para confidencialidad + integridad.
+</p>
+
+<pre class="ejemplo">
+&lt;?php
+$plaintext = "Dato sensible";
+$key = random_bytes(32); // 256 bits (guardala segura)
+$cipher = "aes-256-gcm";
+
+// IV/nonce único por mensaje (12 bytes recomendado para GCM)
+$iv = random_bytes(12);
+
+$ciphertext = openssl_encrypt(
+  $plaintext,
+  $cipher,
+  $key,
+  OPENSSL_RAW_DATA,
+  $iv,
+  $tag  // etiqueta de autenticación (16 bytes)
+);
+
+// Luego, para transportar/guardar: base64
+$paquete = base64_encode($iv . $tag . $ciphertext);
+echo $paquete;
+
+// ----- Decrypt -----
+$raw = base64_decode($paquete);
+$iv2  = substr($raw, 0, 12);
+$tag2 = substr($raw, 12, 16);
+$ct2  = substr($raw, 28);
+
+$decrypted = openssl_decrypt(
+  $ct2,
+  $cipher,
+  $key,
+  OPENSSL_RAW_DATA,
+  $iv2,
+  $tag2
+);
+
+echo "\n" . $decrypted; // "Dato sensible"
+?&gt;
+</pre>
+
+<p class="nota">
+  <strong>Clave:</strong> almacenala fuera del repositorio, en variables de entorno o un secret manager. 
+  <strong>IV/nonce:</strong> nuevo y único por mensaje; puede ir junto con el texto cifrado.
+</p>
+
+<!-- Libsodium -->
+<h2 id="libsodium">Encriptación moderna con libsodium</h2>
+<p>
+  <code>libsodium</code> (extensión nativa) provee primitivas modernas y seguras por defecto. 
+  Para cifrado autenticado simétrico, usá <code>sodium_crypto_secretbox()</code> (XSalsa20-Poly1305).
+</p>
+
+<pre class="ejemplo">
+&lt;?php
+if (!extension_loaded('sodium')) {
+  die("Sodium no disponible");
+}
+
+$mensaje = "Secreto con sodium";
+$key     = random_bytes(SODIUM_CRYPTO_SECRETBOX_KEYBYTES); // 32 bytes
+$nonce   = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES); // 24 bytes
+
+$cipher  = sodium_crypto_secretbox($mensaje, $nonce, $key);
+
+// Empaquetar para transporte
+$paquete = base64_encode($nonce . $cipher);
+
+// ----- Decrypt -----
+$raw   = base64_decode($paquete);
+$n2    = substr($raw, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+$c2    = substr($raw, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+
+$plain = sodium_crypto_secretbox_open($c2, $n2, $key);
+if ($plain === false) {
+  die("Autenticación falló");
+}
+echo $plain; // "Secreto con sodium"
+?&gt;
+</pre>
+
+<p>
+  Para cifrado <strong>asimétrico</strong> (emisor y receptor con claves diferentes), podés usar <code>sodium_crypto_box()</code>.
+</p>
+
+<!-- Aleatorios -->
+<h2 id="aleatorios">Aleatoriedad segura</h2>
+<p>
+  Para claves, IV, tokens o sales: <strong>no uses rand()/mt_rand()</strong>. Usá:
+</p>
+<ul>
+  <li><code>random_bytes(n)</code> → bytes criptográficamente seguros.</li>
+  <li><code>random_int(min,max)</code> → enteros seguros (tokens numéricos).</li>
+</ul>
+
+<pre class="ejemplo">
+&lt;?php
+$token = bin2hex(random_bytes(16)); // 32 hex chars
+$otp   = random_int(100000, 999999); // 6 dígitos
+?&gt;
+</pre>
+
+<!-- Buenas prácticas -->
+<h2 id="buenas">Buenas prácticas</h2>
+<ul>
+  <li><strong>Contraseñas:</strong> nunca cifrar; siempre <code>password_hash/password_verify</code>.</li>
+  <li><strong>Claves:</strong> guardalas en variables de entorno/secret manager; rotación periódica.</li>
+  <li><strong>Algoritmos:</strong> preferí AEAD (GCM/ChaCha20-Poly1305) o <code>secretbox</code> (sodium).</li>
+  <li><strong>IV/nonce:</strong> único por mensaje; no reutilizar con la misma clave.</li>
+  <li><strong>Integridad:</strong> usá cifrado autenticado (tag). Evitá “AES-CBC + HMAC” si no sabés lo que hacés.</li>
+  <li><strong>Transporte:</strong> TLS/HTTPS siempre que sea posible.</li>
+  <li><strong>Errores:</strong> no expongas claves ni textos en claro en logs.</li>
+</ul>
+
+<!-- Errores -->
+<h2 id="errores">Errores comunes</h2>
+<ul>
+  <li>Guardar la <strong>misma clave en el código</strong> (repo). Mejor variables de entorno.</li>
+  <li>Reutilizar <strong>IV/nonce</strong> con la misma clave (rompe seguridad de GCM/CTR).</li>
+  <li>Usar <strong>algoritmos obsoletos</strong> (MD5/SHA1 para contraseñas, DES/RC4).</li>
+  <li>“Cifrar contraseñas” en vez de hashearlas (malo). Si hay que verificar: hash.</li>
+  <li>Generar “aleatorios” con <code>rand()</code>/<code>mt_rand()</code>.</li>
+</ul>
+
+<div class="nota">
+  <strong>Resumen:</strong> Hash para contraseñas; cifrado autenticado para datos recuperables. 
+  Usá primitivas modernas (sodium o AES-GCM), aleatorios seguros y gestioná bien tus claves.
+</div>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+</footer>
+</body>
+</html>

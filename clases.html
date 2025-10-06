@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>PHP — Clases y Programación Orientada a Objetos</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ </header>
+<h1>Clases en PHP — Manual</h1>
+
+<p>
+  En PHP, una <strong>clase</strong> es un molde que define <em>propiedades</em> (datos) y <em>métodos</em> (comportamientos).
+  A partir de una clase se crean <strong>objetos</strong> (instancias).
+</p>
+
+<h2>Índice</h2>
+<ul class="toc">
+  <li><a href="#sintaxis">Sintaxis básica</a></li>
+  <li><a href="#acceso">Modificadores de acceso</a></li>
+  <li><a href="#ctor-dtor">Constructor y destructor</a></li>
+  <li><a href="#getset">Getters y Setters</a></li>
+  <li><a href="#estaticos">Estáticos y constantes</a></li>
+  <li><a href="#herencia">Herencia</a></li>
+  <li><a href="#abstracta">Clases abstractas</a></li>
+  <li><a href="#interfaces">Interfaces</a></li>
+  <li><a href="#traits">Traits</a></li>
+  <li><a href="#tipado">Tipado y tipos de retorno</a></li>
+  <li><a href="#namespaces">Namespaces y autoload</a></li>
+  <li><a href="#buenas">Buenas prácticas</a></li>
+</ul>
+
+<h2 id="sintaxis">Sintaxis básica</h2>
+<pre class="ejemplo">
+&lt;?php
+class Persona {
+  // Propiedades
+  public string $nombre;
+  public int $edad;
+
+  // Método
+  public function saludar(): string {
+    return "Hola, soy " . $this->nombre;
+  }
+}
+
+// Instanciar (crear objeto)
+$p = new Persona();
+$p->nombre = "Pablo";
+$p->edad = 30;
+
+echo $p->saludar(); // Hola, soy Pablo
+?&gt;
+</pre>
+
+<h2 id="acceso">Modificadores de acceso</h2>
+<table>
+  <tr><th>Modificador</th><th>Acceso</th><th>Uso típico</th></tr>
+  <tr><td><code>public</code></td><td>Desde cualquier lugar</td><td>API pública de la clase</td></tr>
+  <tr><td><code>protected</code></td><td>Dentro de la clase y sus hijas</td><td>Para herencia</td></tr>
+  <tr><td><code>private</code></td><td>Solo dentro de la clase</td><td>Encapsular detalles internos</td></tr>
+</table>
+
+<h2 id="ctor-dtor">Constructor y destructor</h2>
+<pre class="ejemplo">
+&lt;?php
+class Persona {
+  public function __construct(
+    public string $nombre,  // promoción de propiedades (PHP 8+)
+    public int $edad
+  ) {}
+
+  public function __destruct() {
+    // Limpieza al destruir el objeto (rara vez necesario)
+  }
+}
+
+$p = new Persona("Ana", 25);
+?&gt;
+</pre>
+
+<h2 id="getset">Getters y Setters</h2>
+<pre class="ejemplo">
+&lt;?php
+class Usuario {
+  private string $email;
+
+  public function setEmail(string $email): void {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      throw new InvalidArgumentException("Email inválido");
+    }
+    $this->email = $email;
+  }
+
+  public function getEmail(): string {
+    return $this->email;
+  }
+}
+
+$u = new Usuario();
+$u->setEmail("ana@mail.com");
+echo $u->getEmail();
+?&gt;
+</pre>
+
+<h2 id="estaticos">Estáticos y constantes</h2>
+<pre class="ejemplo">
+&lt;?php
+class Matematica {
+  public const PI = 3.14159;
+
+  public static function sumar(int|float $a, int|float $b): int|float {
+    return $a + $b;
+  }
+}
+
+echo Matematica::PI;
+echo Matematica::sumar(2, 3);
+?&gt;
+</pre>
+
+<h2 id="herencia">Herencia</h2>
+<pre class="ejemplo">
+&lt;?php
+class Persona {
+  public function __construct(public string $nombre) {}
+  public function saludar(): string { return "Hola, soy $this->nombre"; }
+}
+
+class Estudiante extends Persona {
+  public function __construct(string $nombre, public string $curso) {
+    parent::__construct($nombre);
+  }
+  public function info(): string {
+    return $this->saludar() . " y estudio $this->curso";
+  }
+}
+
+$e = new Estudiante("Luis", "Programación");
+echo $e->info();
+?&gt;
+</pre>
+
+<h2 id="abstracta">Clases abstractas</h2>
+<p>Definen una <em>plantilla</em> con métodos que las hijas deben implementar.</p>
+<pre class="ejemplo">
+&lt;?php
+abstract class Forma {
+  abstract public function area(): float;
+}
+
+class Rectangulo extends Forma {
+  public function __construct(private float $ancho, private float $alto) {}
+  public function area(): float { return $this->ancho * $this->alto; }
+}
+?&gt;
+</pre>
+
+<h2 id="interfaces">Interfaces</h2>
+<p>Contratos: definen qué métodos deben existir, sin implementación.</p>
+<pre class="ejemplo">
+&lt;?php
+interface Exportable {
+  public function export(): string;
+}
+
+class Reporte implements Exportable {
+  public function export(): string { return "CSV..."; }
+}
+?&gt;
+</pre>
+
+<h2 id="traits">Traits</h2>
+<p>Reutilización horizontal de métodos entre clases no relacionadas.</p>
+<pre class="ejemplo">
+&lt;?php
+trait Loggable {
+  public function log(string $msg): void { echo "[LOG] $msg\n"; }
+}
+
+class Servicio {
+  use Loggable;
+}
+
+$s = new Servicio();
+$s->log("Listo");
+?&gt;
+</pre>
+
+<h2 id="tipado">Tipado y tipos de retorno</h2>
+<pre class="ejemplo">
+&lt;?php
+class Calculadora {
+  public function sumar(int $a, int $b): int {
+    return $a + $b;
+  }
+
+  public function buscar(?string $q): array { // acepta null, retorna array
+    return $q ? ["resultado"] : [];
+  }
+}
+?&gt;
+</pre>
+
+<h2 id="namespaces">Namespaces y autoload</h2>
+<pre class="ejemplo">
+&lt;?php
+namespace App\Model;
+
+class Usuario { /* ... */ }
+
+// composer.json (PSR-4)
+// "autoload": { "psr-4": { "App\\\": "src/" } }
+// $ composer dump-autoload
+// require 'vendor/autoload.php'; // carga automática
+?&gt;
+</pre>
+
+<h2 id="buenas">Buenas prácticas</h2>
+<ul>
+  <li>Encapsular: propiedades <code>private/protected</code>, exponer getters/setters cuando haga falta.</li>
+  <li>Single Responsibility: cada clase con una responsabilidad clara.</li>
+  <li>Tipado estricto cuando sea posible (<code>declare(strict_types=1);</code> al inicio).</li>
+  <li>Interfaces para contratos; <em>dependencias</em> contra interfaces, no implementaciones (DIP).</li>
+  <li>Usar Composer y PSR-4 para organizar y cargar clases.</li>
+  <li>Preferir composición sobre herencia cuando sea razonable.</li>
+</ul>
+
+<div class="nota">
+  <strong>Resumen:</strong> Las clases agrupan datos y comportamiento. Con modificadores de acceso, herencia,
+  interfaces, traits y tipado moderno, PHP ofrece una POO completa y productiva.
+</div>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+</footer>
+</body>
+</html>

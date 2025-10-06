@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Envío de datos entre páginas con PHP (GET y POST)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+
+<h1>Envío de datos entre páginas con PHP (GET y POST)</h1>
+
+<p>
+  En PHP, la forma más común de enviar información desde el navegador al servidor es mediante los métodos
+  <strong>GET</strong> y <strong>POST</strong>. Este manual resume qué son, cuándo usarlos y muestra
+  ejemplos prácticos para formularios y enlaces.
+</p>
+
+<div class="nota">
+  <strong>Idea clave:</strong> GET envía datos en la URL (visibles), POST los envía en el cuerpo del mensaje (no visibles en la URL).
+</div>
+
+<h2>Índice</h2>
+<ul class="toc">
+  <li><a href="#que-es-get-post">¿Qué es GET y POST?</a></li>
+  <li><a href="#comparativa">Tabla comparativa</a></li>
+  <li><a href="#get">Ejemplo con GET</a></li>
+  <li><a href="#post">Ejemplo con POST</a></li>
+  <li><a href="#buenas-practicas">Buenas prácticas y seguridad</a></li>
+  <li><a href="#patron-prg">Patrón PRG (Post/Redirect/Get)</a></li>
+</ul>
+
+<h2 id="que-es-get-post">¿Qué es GET y POST?</h2>
+<ul>
+  <li><strong>GET</strong>: envía los datos adjuntos a la URL tras el signo <code>?</code> (query string). Útil para búsquedas, filtros, paginación y navegación.</li>
+  <li><strong>POST</strong>: envía los datos en el cuerpo de la petición HTTP. Útil para formularios con datos sensibles o largos (login, registro, carga de archivos).</li>
+</ul>
+
+<h2 id="comparativa">Tabla comparativa</h2>
+<table>
+  <tr>
+    <th>Aspecto</th>
+    <th>GET</th>
+    <th>POST</th>
+  </tr>
+  <tr>
+    <td>Visibilidad</td>
+    <td>Parámetros visibles en la URL</td>
+    <td>Datos no visibles en la URL (viajan en el cuerpo)</td>
+  </tr>
+  <tr>
+    <td>Uso típico</td>
+    <td>Filtros, búsquedas, navegación, enlaces compartibles</td>
+    <td>Formularios con datos sensibles, creación/actualización de registros</td>
+  </tr>
+  <tr>
+    <td>Límite práctico</td>
+    <td>Limitado por longitud de URL del navegador/servidor</td>
+    <td>Permite mayor volumen de datos</td>
+  </tr>
+  <tr>
+    <td>Cacheable por defecto</td>
+    <td>Suele ser cacheable y bookmarkeable</td>
+    <td>No es cacheable ni bookmarkeable por defecto</td>
+  </tr>
+  <tr>
+    <td>Idempotencia</td>
+    <td>Debería ser <em>seguro</em> (no cambia estado del servidor)</td>
+    <td>Usado para operaciones que modifican estado</td>
+  </tr>
+</table>
+
+<h2 id="get">Ejemplo con GET</h2>
+
+<p><strong>Escenario:</strong> Enlaces con parámetros para filtrar por usuario y edad.</p>
+<pre class="ejemplo">
+&lt;!-- Enlaces (del lado del cliente) --&gt;
+&lt;a href="perfil.php?usuario=Pablo&amp;edad=30"&gt;Ver perfil de Pablo&lt;/a&gt;
+&lt;a href="perfil.php?usuario=Ana&amp;edad=25"&gt;Ver perfil de Ana&lt;/a&gt;
+
+&lt;!-- perfil.php (del lado del servidor) --&gt;
+&lt;?php
+$usuario = $_GET['usuario'] ?? null;
+$edad    = $_GET['edad']    ?? null;
+
+if ($usuario &amp;&amp; $edad) {
+  echo "Usuario: " . htmlspecialchars($usuario, ENT_QUOTES, 'UTF-8') . "\n";
+  echo "Edad: " . (int)$edad;
+} else {
+  echo "Faltan parámetros en la URL.";
+}
+?&gt;
+</pre>
+
+<h2 id="post">Ejemplo con POST</h2>
+
+<p><strong>Escenario:</strong> Formulario de login (usuario/clave) que envía datos al servidor por POST.</p>
+<pre class="ejemplo">
+&lt;!-- login.html (cliente) --&gt;
+&lt;form action="login.php" method="post"&gt;
+  &lt;label&gt;Usuario:&lt;/label&gt;
+  &lt;input type="text" name="usuario" required&gt;
+
+  &lt;label&gt;Contraseña:&lt;/label&gt;
+  &lt;input type="password" name="clave" required&gt;
+
+  &lt;button type="submit"&gt;Ingresar&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;!-- login.php (servidor) --&gt;
+&lt;?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $usuario = trim($_POST['usuario'] ?? '');
+  $clave   = $_POST['clave'] ?? '';
+
+  if ($usuario === '' || $clave === '') {
+    echo "Datos incompletos.";
+    exit;
+  }
+
+  // Aquí validarías contra la BD usando password_hash/password_verify
+  echo "Login recibido para: " . htmlspecialchars($usuario, ENT_QUOTES, 'UTF-8');
+} else {
+  echo "Acceso inválido (use POST).";
+}
+?&gt;
+</pre>
+
+<h2 id="buenas-practicas">Buenas prácticas y seguridad</h2>
+<ul>
+  <li><strong>Validar y sanitizar</strong> siempre la entrada del usuario (<code>filter_var</code>, <code>ctype</code>, regex).</li>
+  <li><strong>Escapar</strong> al imprimir en HTML: <code>htmlspecialchars($valor, ENT_QUOTES, 'UTF-8')</code>.</li>
+  <li>Para contraseñas: <code>password_hash()</code> y <code>password_verify()</code>.</li>
+  <li>Para BD: <strong>consultas preparadas (PDO/mysqli)</strong> — nunca concatenar variables en SQL.</li>
+  <li>Usar <strong>CSRF tokens</strong> en formularios sensibles.</li>
+  <li>No exponer datos sensibles en la URL (GET). Preferí POST para logins, registros, etc.</li>
+</ul>
+
+<h2 id="patron-prg">Patrón PRG (Post/Redirect/Get)</h2>
+<p>
+  Tras procesar un formulario por <strong>POST</strong>, es buena práctica <strong>redirigir</strong> a una página por <strong>GET</strong> para evitar reenvíos al actualizar:
+</p>
+<pre class="ejemplo">
+&lt;?php
+// procesar.php
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // ... procesar y validar ...
+  $_SESSION['flash'] = "Operación exitosa";
+
+  // Redirigir (PRG) para que F5 no reenvíe el POST
+  header("Location: resultado.php");
+  exit;
+}
+?&gt;
+</pre>
+
+<div class="nota">
+  <strong>Resumen:</strong> Usá <em>GET</em> para lectura/navegación y <em>POST</em> para envíos que cambian estado.
+  Validá y protegé tus formularios, y aplicá PRG para una mejor UX.
+</div>
+
+</body>
+</html>

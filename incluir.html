@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Formas de incluir PHP en HTML</title>
+  <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+ <header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+
+<h1>Formas de incluir PHP en un documento HTML</h1>
+
+<p>
+  En PHP se puede mezclar código PHP con HTML.  
+  A continuación se muestran las formas más comunes de hacerlo.
+</p>
+
+<div class="nota">
+  <strong>Importante:</strong> Para que el código PHP se ejecute, el archivo debe tener extensión <code>.php</code> 
+  y ser procesado por un servidor con PHP habilitado (no basta con abrirlo en el navegador directamente).
+</div>
+
+<h2>1. Bloque estándar de PHP</h2>
+<p>Es la forma más usada: <code>&lt;?php ... ?&gt;</code></p>
+<pre class="ejemplo">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+
+&lt;?php
+echo "Hola mundo en PHP";
+?&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<h2>2. Código PHP dentro de HTML</h2>
+<p>Podés “intercalar” PHP dentro del HTML para mostrar valores dinámicos:</p>
+<pre class="ejemplo">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+
+&lt;h1&gt;Bienvenido &lt;?php echo "Pablo"; ?&gt;&lt;/h1&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<h2>3. Etiqueta corta (short echo)</h2>
+<p>Con <code>&lt;?= ... ?&gt;</code> se imprime directamente, es un atajo de <code>&lt;?php echo ... ?&gt;</code>.</p>
+<pre class="ejemplo">
+&lt;h2&gt;La fecha de hoy es: &lt;?= date("d/m/Y") ?&gt;&lt;/h2&gt;
+</pre>
+
+<h2>4. Incluir archivos PHP externos</h2>
+<p>Se pueden insertar otros archivos con <code>include</code> o <code>require</code>:</p>
+<pre class="ejemplo">
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;?php include "header.php"; ?&gt;
+  &lt;/header&gt;
+
+  &lt;main&gt;
+    &lt;h1&gt;Contenido principal&lt;/h1&gt;
+  &lt;/main&gt;
+&lt;/body&gt;
+</pre>
+
+<table>
+  <tr><th>Función</th><th>Comportamiento</th></tr>
+  <tr><td><code>include</code></td><td>Incluye el archivo, si no existe genera <em>warning</em> pero el script sigue.</td></tr>
+  <tr><td><code>require</code></td><td>Incluye el archivo, si no existe genera <em>fatal error</em> y se detiene.</td></tr>
+  <tr><td><code>include_once</code></td><td>Incluye el archivo solo una vez.</td></tr>
+  <tr><td><code>require_once</code></td><td>Incluye el archivo solo una vez, con error fatal si no existe.</td></tr>
+</table>
+
+<h2>5. PHP en atributos HTML</h2>
+<p>También se puede usar dentro de atributos de etiquetas:</p>
+<pre class="ejemplo">
+&lt;img src="&lt;?= $rutaImagen ?&gt;" alt="Foto"&gt;
+</pre>
+
+<h2>Buenas prácticas</h2>
+<ul>
+  <li>Usar siempre <code>&lt;?php ... ?&gt;</code> o <code>&lt;?= ... ?&gt;</code> (las etiquetas cortas <code>&lt;? ... ?&gt;</code> no son recomendadas).</li>
+  <li>Mantener separado el código de lógica y la presentación (usar MVC o capas).</li>
+  <li>Preferir <code>require_once</code> / <code>include_once</code> para evitar duplicados.</li>
+  <li>Si un archivo contiene solo PHP, no mezclar HTML innecesariamente.</li>
+</ul>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+
+</footer>
+
+</body>
+</html>

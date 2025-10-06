@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PHP — Bucles y Condicionales</title>
+  <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+  <header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+
+<h1>Bucles y Condicionales en PHP</h1>
+
+<p>
+  En PHP los <strong>condicionales</strong> permiten tomar decisiones en el flujo del programa, 
+  y los <strong>bucles</strong> permiten repetir bloques de código varias veces.
+</p>
+
+<div class="nota">
+  Este documento incluye un índice con enlaces internos y una tabla comparativa al final.
+</div>
+
+<!-- Índice -->
+<h2>Índice</h2>
+<ul class="toc">
+  <li><a href="#if">Condicional if</a></li>
+  <li><a href="#if-else">if / else</a></li>
+  <li><a href="#elseif">if / elseif / else</a></li>
+  <li><a href="#switch">Condicional switch</a></li>
+  <li><a href="#while">Bucle while</a></li>
+  <li><a href="#do-while">Bucle do...while</a></li>
+  <li><a href="#for">Bucle for</a></li>
+  <li><a href="#foreach">Bucle foreach</a></li>
+  <li><a href="#comparativa">Tabla comparativa</a></li>
+</ul>
+
+<!-- Secciones -->
+
+<h2 id="if">Condicional if</h2>
+<pre class="ejemplo">
+&lt;?php
+$edad = 20;
+if ($edad &gt;= 18) {
+  echo "Sos mayor de edad";
+}
+?&gt;
+</pre>
+
+<h2 id="if-else">if / else</h2>
+<pre class="ejemplo">
+&lt;?php
+$activo = false;
+if ($activo) {
+  echo "Usuario activo";
+} else {
+  echo "Usuario inactivo";
+}
+?&gt;
+</pre>
+
+<h2 id="elseif">if / elseif / else</h2>
+<pre class="ejemplo">
+&lt;?php
+$nota = 75;
+if ($nota &gt;= 90) {
+  echo "Excelente";
+} elseif ($nota &gt;= 70) {
+  echo "Aprobado";
+} else {
+  echo "Reprobado";
+}
+?&gt;
+</pre>
+
+<h2 id="switch">Condicional switch</h2>
+<pre class="ejemplo">
+&lt;?php
+$opcion = "B";
+
+switch ($opcion) {
+  case "A":
+    echo "Elegiste A";
+    break;
+  case "B":
+    echo "Elegiste B";
+    break;
+  case "C":
+    echo "Elegiste C";
+    break;
+  default:
+    echo "Opción no válida";
+}
+?&gt;
+</pre>
+
+<h2 id="while">Bucle while</h2>
+<pre class="ejemplo">
+&lt;?php
+$i = 1;
+while ($i &lt;= 5) {
+  echo "Número: $i\n";
+  $i++;
+}
+?&gt;
+</pre>
+
+<h2 id="do-while">Bucle do...while</h2>
+<pre class="ejemplo">
+&lt;?php
+$i = 1;
+do {
+  echo "Número: $i\n";
+  $i++;
+} while ($i &lt;= 5);
+?&gt;
+</pre>
+
+<h2 id="for">Bucle for</h2>
+<pre class="ejemplo">
+&lt;?php
+for ($i = 1; $i &lt;= 5; $i++) {
+  echo "Número: $i\n";
+}
+?&gt;
+</pre>
+
+<h2 id="foreach">Bucle foreach</h2>
+<pre class="ejemplo">
+&lt;?php
+$colores = ["rojo","verde","azul"];
+
+foreach ($colores as $c) {
+  echo $c . "\n";
+}
+
+// con clave y valor
+$persona = ["nombre" =&gt; "Pablo", "edad" =&gt; 30];
+foreach ($persona as $clave =&gt; $valor) {
+  echo "$clave: $valor\n";
+}
+?&gt;
+</pre>
+
+<!-- Comparativa -->
+<h2 id="comparativa">Tabla comparativa</h2>
+<table>
+  <tr>
+    <th>Categoría</th>
+    <th>Estructura</th>
+    <th>Cuándo usar</th>
+    <th>Ejemplo</th>
+  </tr>
+  <tr>
+    <td>Condicional</td>
+    <td><code>if</code></td>
+    <td>Una sola condición simple.</td>
+    <td><code>if ($x &gt; 0) { ... }</code></td>
+  </tr>
+  <tr>
+    <td>Condicional</td>
+    <td><code>if / else</code></td>
+    <td>Dos caminos mutuamente excluyentes.</td>
+    <td><code>if ($ok) { ... } else { ... }</code></td>
+  </tr>
+  <tr>
+    <td>Condicional</td>
+    <td><code>if / elseif / else</code></td>
+    <td>Varias condiciones ordenadas por prioridad.</td>
+    <td><code>if ($a) { ... } elseif ($b) { ... } else { ... }</code></td>
+  </tr>
+  <tr>
+    <td>Condicional</td>
+    <td><code>switch</code></td>
+    <td>Muchos casos sobre el mismo valor (mejora legibilidad).</td>
+    <td><code>switch ($op) { case 'A': ... }</code></td>
+  </tr>
+  <tr>
+    <td>Bucle</td>
+    <td><code>while</code></td>
+    <td>Repetir mientras la condición sea verdadera; cuando no sabés cuántas veces.</td>
+    <td><code>while ($i &lt; n) { $i++; }</code></td>
+  </tr>
+  <tr>
+    <td>Bucle</td>
+    <td><code>do...while</code></td>
+    <td>Como <code>while</code>, pero garantiza ejecutar <em>al menos una vez</em>.</td>
+    <td><code>do { ... } while ($ok);</code></td>
+  </tr>
+  <tr>
+    <td>Bucle</td>
+    <td><code>for</code></td>
+    <td>Iteraciones contadas (sabiendo inicio, fin y paso).</td>
+    <td><code>for ($i=0; $i&lt;N; $i++) { ... }</code></td>
+  </tr>
+  <tr>
+    <td>Bucle</td>
+    <td><code>foreach</code></td>
+    <td>Recorrer arrays/iterables fácil y legible.</td>
+    <td><code>foreach ($arr as $k =&gt; $v) { ... }</code></td>
+  </tr>
+</table>
+
+<div class="nota">
+  <strong>Resumen:</strong> 
+  Usá <code>if/elseif/else</code> para decisiones; <code>switch</code> para múltiples casos de una misma variable.  
+  Para repetir: <code>while</code> cuando no sabés cuántas vueltas; <code>do...while</code> si necesitás al menos una ejecución; 
+  <code>for</code> para conteos; <code>foreach</code> para colecciones.
+</div>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+</footer>
+
+</body>
+</html>

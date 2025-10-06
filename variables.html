@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Variables en PHP</title>
+  <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+
+
+<h1>Variables en PHP</h1>
+
+<p>
+  Una <strong>variable en PHP</strong> es un contenedor que almacena datos para usarlos en el programa.
+  Todas las variables comienzan con el símbolo <code>$</code> y pueden contener texto, números, booleanos,
+  arrays, objetos o incluso <code>NULL</code>.
+</p>
+
+<h2>Reglas generales</h2>
+<ul>
+  <li>Deben comenzar con <code>$</code>.</li>
+  <li>El nombre empieza con una letra o guion bajo, seguido de letras/números.</li>
+  <li>No pueden contener espacios ni caracteres especiales.</li>
+  <li>Son sensibles a mayúsculas/minúsculas: <code>$nombre</code> ≠ <code>$Nombre</code>.</li>
+</ul>
+
+<h2>Tipos de datos comunes</h2>
+<table>
+  <tr><th>Tipo</th><th>Ejemplo</th><th>Descripción</th></tr>
+  <tr><td>string</td><td><code>"Hola"</code></td><td>Texto</td></tr>
+  <tr><td>int</td><td><code>42</code></td><td>Número entero</td></tr>
+  <tr><td>float</td><td><code>3.14</code></td><td>Número decimal</td></tr>
+  <tr><td>bool</td><td><code>true</code> / <code>false</code></td><td>Booleano</td></tr>
+  <tr><td>array</td><td><code>["rojo","verde","azul"]</code></td><td>Conjunto de valores</td></tr>
+  <tr><td>object</td><td><code>new Persona()</code></td><td>Instancia de clase</td></tr>
+  <tr><td>NULL</td><td><code>NULL</code></td><td>Valor vacío</td></tr>
+</table>
+
+<h2>Ejemplo básico</h2>
+<pre class="ejemplo">
+&lt;?php
+$nombre = "Pablo";
+$edad = 30;
+$activo = true;
+
+echo "Mi nombre es $nombre\n";
+echo "Tengo $edad años\n";
+echo "¿Estoy activo? " . ($activo ? "Sí" : "No");
+?&gt;
+</pre>
+
+<h2>Actualizar valores</h2>
+<pre class="ejemplo">
+&lt;?php
+$contador = 1;
+$contador = $contador + 1; // ahora vale 2
+$contador += 5;            // ahora vale 7
+echo $contador;
+?&gt;
+</pre>
+
+<h2>Concatenación de strings</h2>
+<pre class="ejemplo">
+&lt;?php
+$nombre = "Pablo";
+$mensaje = "Hola, " . $nombre . "!";
+echo $mensaje; // Hola, Pablo!
+?&gt;
+</pre>
+
+<h2>Buenas prácticas</h2>
+<ul>
+  <li>Usar nombres descriptivos (<code>$usuario</code>, <code>$precioTotal</code>).</li>
+  <li>Inicializar siempre las variables antes de usarlas.</li>
+  <li>Usar <code>var_dump($var)</code> o <code>print_r($var)</code> para depuración.</li>
+  <li>Escapar las variables al imprimir en HTML con <code>htmlspecialchars()</code>.</li>
+</ul>
+
+<div class="nota">
+  <strong>Resumen:</strong> las variables en PHP se crean con <code>$</code>, no tienen tipo fijo,
+  y se pueden usar para almacenar cualquier tipo de dato en tu aplicación web.
+</div>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+
+</footer>
+
+</body>
+</html>
+

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superglobales de PHP</title>
+<link rel="stylesheet" href="./css/estilos.css">
+
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+<h1 id="indice">Superglobales de PHP</h1>
+<p>En PHP existen varias variables <strong>superglobales</strong> que están siempre disponibles en cualquier parte del script. Todas comienzan con <code>$_</code>.</p>
+
+<table>
+  <tr>
+    <th>Variable</th>
+    <th>Descripción</th>
+    <th>Ejemplo</th>
+  </tr>
+  <tr>
+    <td><a href="#get"><code>$_GET</code></a></td>
+    <td>Datos enviados por la URL (query string).</td>
+    <td><code>$_GET['id']</code></td>
+  </tr>
+  <tr>
+    <td><a href="#post"><code>$_POST</code></a></td>
+    <td>Datos enviados por formularios con método POST.</td>
+    <td><code>$_POST['usuario']</code></td>
+  </tr>
+  <tr>
+    <td><a href="#request"><code>$_REQUEST</code></a></td>
+    <td>Combina <code>$_GET</code>, <code>$_POST</code> y <code>$_COOKIE</code>.</td>
+    <td><code>$_REQUEST['dato']</code></td>
+  </tr>
+  <tr>
+    <td><a href="#cookie"><code>$_COOKIE</code></a></td>
+    <td>Acceso a cookies enviadas por el navegador.</td>
+    <td><code>$_COOKIE['idioma']</code></td>
+  </tr>
+  <tr>
+    <td><a href="#session"><code>$_SESSION</code></a></td>
+    <td>Variables de sesión (requiere <code>session_start()</code>).</td>
+    <td><code>$_SESSION['user_id']</code></td>
+  </tr>
+  <tr>
+    <td><a href="#files"><code>$_FILES</code></a></td>
+    <td>Archivos subidos mediante formularios.</td>
+    <td><code>$_FILES['foto']['name']</code></td>
+  </tr>
+  <tr>
+    <td><a href="#server"><code>$_SERVER</code></a></td>
+    <td>Información del servidor y de la petición.</td>
+    <td><code>$_SERVER['REQUEST_METHOD']</code></td>
+  </tr>
+  <tr>
+    <td><a href="#env"><code>$_ENV</code></a></td>
+    <td>Variables de entorno del sistema o PHP.</td>
+    <td><code>$_ENV['PATH']</code></td>
+  </tr>
+  <tr>
+    <td><a href="#globals"><code>$GLOBALS</code></a></td>
+    <td>Contiene todas las variables globales en un array.</td>
+    <td><code>$GLOBALS['miVar']</code></td>
+  </tr>
+</table>
+
+
+<h2 id="get">Superglobal $_GET[...]</h2>
+<p>
+  La superglobal <code>$_GET</code> se utiliza en PHP para acceder a los datos que se envían
+  en la <strong>URL</strong> después del signo <code>?</code>.  
+  Es muy común usarla para pasar parámetros entre páginas, como identificadores de usuario, 
+  artículos, filtros de búsqueda, etc.
+</p>
+
+<h2>Características principales</h2>
+<ul>
+  <li>Los datos viajan en la URL, visibles para el usuario.</li>
+  <li>Se usa principalmente con el método <code>GET</code> de formularios o con enlaces.</li>
+  <li>Se accede mediante la sintaxis <code>$_GET['nombre_campo']</code>.</li>
+  <li>No es recomendable enviar datos sensibles (ejemplo: contraseñas).</li>
+</ul>
+
+<h2>Ejemplo de URL con parámetros</h2>
+<p>
+  <code>pagina.php?usuario=Pablo&edad=30</code>
+</p>
+
+<table>
+  <tr>
+    <th>Variable</th>
+    <th>Valor</th>
+  </tr>
+  <tr>
+    <td><code>$_GET['usuario']</code></td>
+    <td>Pablo</td>
+  </tr>
+  <tr>
+    <td><code>$_GET['edad']</code></td>
+    <td>30</td>
+  </tr>
+</table>
+
+<h2>Ejemplo de código PHP</h2>
+<pre class="ejemplo">
+&lt;?php
+// Capturar valores enviados por GET
+$usuario = $_GET['usuario'];
+$edad    = $_GET['edad'];
+
+// Mostrar resultados
+echo "Usuario: " . $usuario;
+echo "Edad: " . $edad;
+?&gt;
+</pre>
+
+<h2>Ejemplo de enlace con parámetros</h2>
+<p>
+  <code>&lt;a href="pagina.php?usuario=Ana&amp;edad=25"&gt;Ver datos de Ana&lt;/a&gt;</code>
+</p>
+
+<h2>Ejemplo de formulario con GET</h2>
+<pre class="ejemplo">
+&lt;form action="pagina.php" method="get"&gt;
+  &lt;label&gt;Usuario:&lt;/label&gt;
+  &lt;input type="text" name="usuario"&gt;
+
+  &lt;label&gt;Edad:&lt;/label&gt;
+  &lt;input type="number" name="edad"&gt;
+
+  &lt;button type="submit"&gt;Enviar&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+<a href="#indice">Volver</a>
+<h2 id="post">Superglobal $_POST[...]</h1>
+
+<p>
+  La superglobal <code>$_POST</code> se utiliza en PHP para acceder a los datos que se envían
+  desde un formulario mediante el método <code>POST</code>.  
+  Es ideal para enviar información sensible (como contraseñas) porque los datos <strong>no se muestran en la URL</strong>.
+</p>
+
+<h2>Características principales</h2>
+<ul>
+  <li>Los datos viajan en el cuerpo de la petición HTTP, no visibles en la URL.</li>
+  <li>Se usa principalmente con formularios <code>method="post"</code>.</li>
+  <li>Se accede mediante la sintaxis <code>$_POST['nombre_campo']</code>.</li>
+  <li>Permite enviar gran cantidad de información (a diferencia de GET que tiene límite en la URL).</li>
+</ul>
+
+<h2>Ejemplo de formulario con POST</h2>
+<pre class="ejemplo">
+&lt;form action="pagina.php" method="post"&gt;
+  &lt;label&gt;Usuario:&lt;/label&gt;
+  &lt;input type="text" name="usuario"&gt;
+
+  &lt;label&gt;Contraseña:&lt;/label&gt;
+  &lt;input type="password" name="clave"&gt;
+
+  &lt;button type="submit"&gt;Enviar&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+
+<h2>Ejemplo de código PHP</h2>
+<pre class="ejemplo">
+&lt;?php
+// Capturar valores enviados por POST
+$usuario = $_POST['usuario'];
+$clave   = $_POST['clave'];
+
+// Mostrar resultados (nunca mostrar contraseñas en un sistema real)
+echo "Usuario: " . $usuario;
+echo "Clave: " . $clave;
+?&gt;
+</pre>
+
+<h2>Tabla comparativa rápida</h2>
+<table>
+  <tr>
+    <th>Aspecto</th>
+    <th>$_GET</th>
+    <th>$_POST</th>
+  </tr>
+  <tr>
+    <td>Visibilidad</td>
+    <td>Parámetros visibles en la URL</td>
+    <td>Datos ocultos en el cuerpo de la petición</td>
+  </tr>
+  <tr>
+    <td>Uso común</td>
+    <td>Filtros, búsquedas, navegación</td>
+    <td>Formularios de login, registros, carga de datos sensibles</td>
+  </tr>
+  <tr>
+    <td>Límite de datos</td>
+    <td>Limitado por la longitud de la URL</td>
+    <td>Permite enviar mucha más información</td>
+  </tr>
+</table>
+<a href="#indice">Volver</a>
+<h2 id="request">Superglobal $_REQUEST[...]</h2>
+
+<p>
+  La superglobal <code>$_REQUEST</code> en PHP permite acceder a datos enviados por 
+  <strong>GET</strong>, <strong>POST</strong> y <strong>COOKIE</strong>.  
+  Es como un contenedor que mezcla esas tres fuentes en un solo array asociativo.
+</p>
+
+<h2>Características principales</h2>
+<ul>
+  <li>Contiene los valores de <code>$_GET</code>, <code>$_POST</code> y <code>$_COOKIE</code>.</li>
+  <li>Útil si no importa cómo se envían los datos (aunque es mejor usar <code>$_GET</code> o <code>$_POST</code> directamente para mayor claridad).</li>
+  <li>Se accede igual que los demás: <code>$_REQUEST['campo']</code>.</li>
+  <li>El orden de prioridad depende de la configuración de <code>php.ini</code> (directiva <code>variables_order</code>).</li>
+</ul>
+
+<h2>Ejemplo de formulario</h2>
+<pre class="ejemplo">
+&lt;form action="pagina.php" method="post"&gt;
+  &lt;label&gt;Usuario:&lt;/label&gt;
+  &lt;input type="text" name="usuario"&gt;
+
+  &lt;label&gt;Edad:&lt;/label&gt;
+  &lt;input type="number" name="edad"&gt;
+
+  &lt;button type="submit"&gt;Enviar&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+
+<h2>Ejemplo de código PHP</h2>
+<pre class="ejemplo">
+&lt;?php
+// Capturar valores enviados por GET, POST o COOKIE
+$usuario = $_REQUEST['usuario'];
+$edad    = $_REQUEST['edad'];
+
+echo "Usuario: " . $usuario;
+echo "Edad: " . $edad;
+?&gt;
+</pre>
+
+<h2>Tabla comparativa rápida</h2>
+<table>
+  <tr>
+    <th>Variable</th>
+    <th>Origen de datos</th>
+    <th>Uso recomendado</th>
+  </tr>
+  <tr>
+    <td><code>$_GET</code></td>
+    <td>Parámetros en la URL</td>
+    <td>Filtros, navegación, búsquedas</td>
+  </tr>
+  <tr>
+    <td><code>$_POST</code></td>
+    <td>Formulario enviado por POST</td>
+    <td>Datos sensibles, login, registro</td>
+  </tr>
+  <tr>
+    <td><code>$_REQUEST</code></td>
+    <td>GET + POST + COOKIE</td>
+    <td>Cuando no importa de dónde viene el dato (poco usado en apps seguras)</td>
+  </tr>
+</table>
+<a href="#indice">Volver</a>
+
+<h2 id="cookie">Superglobal $_COOKIE[...]</h2>
+
+<p>
+  La superglobal <code>$_COOKIE</code> permite acceder a las <strong>cookies</strong> que el
+  navegador envía al servidor.  
+  Una cookie es un pequeño archivo de texto que el servidor guarda en el navegador del usuario,
+  y que luego se reenvía automáticamente en cada petición.
+</p>
+
+<h2>Características principales</h2>
+<ul>
+  <li>Las cookies se crean con la función <code>setcookie()</code> en PHP.</li>
+  <li>Almacenadas en el navegador del usuario.</li>
+  <li>Pueden tener fecha de expiración.</li>
+  <li>No son seguras para guardar datos sensibles sin cifrado.</li>
+  <li>Se accede a ellas mediante <code>$_COOKIE['nombre']</code>.</li>
+</ul>
+
+<h2>Ejemplo de crear y leer una cookie</h2>
+<pre class="ejemplo">
+&lt;?php
+// Crear una cookie llamada "usuario" con valor "Pablo"
+// Expira en 1 hora (3600 segundos)
+setcookie("usuario", "Pablo", time() + 3600);
+
+// Leer la cookie (estará disponible en la próxima carga de página)
+if (isset($_COOKIE['usuario'])) {
+    echo "Bienvenido, " . $_COOKIE['usuario'];
+} else {
+    echo "No hay cookie de usuario.";
+}
+?&gt;
+</pre>
+
+<h2>Ejemplo práctico de uso</h2>
+<ul>
+  <li>Recordar el nombre del usuario en un login.</li>
+  <li>Guardar el idioma seleccionado en una web.</li>
+  <li>Mantener las preferencias de tema (oscuro/claro).</li>
+</ul>
+
+<h2>Tabla resumen</h2>
+<table>
+  <tr>
+    <th>Función</th>
+    <th>Ejemplo</th>
+    <th>Descripción</th>
+  </tr>
+  <tr>
+    <td><code>setcookie()</code></td>
+    <td><code>setcookie("idioma","es",time()+3600);</code></td>
+    <td>Crea una cookie llamada <em>idioma</em> con valor <em>es</em>, expira en 1 hora.</td>
+  </tr>
+  <tr>
+    <td><code>$_COOKIE['idioma']</code></td>
+    <td><code>echo $_COOKIE['idioma'];</code></td>
+    <td>Lee el valor de la cookie <em>idioma</em>.</td>
+  </tr>
+  </table>
+<a href="#indice">volver</a>
+<h2 id="session">Superglobal $_SESSION en PHP — Manual Completo</h1>
+
+<p>
+  <strong>$_SESSION</strong> permite guardar datos del usuario en el <em>servidor</em> durante su navegación.
+  A diferencia de las cookies, la información no viaja en cada request: el servidor la relaciona con el usuario
+  mediante un <em>session ID</em> (típicamente en la cookie <code>PHPSESSID</code>).
+</p>
+
+<div class="nota">
+  <strong>Recordá:</strong> para usar <code>$_SESSION</code> debés llamar a <code>session_start()</code> antes de enviar cualquier salida al navegador.
+</div>
+
+<h2>Iniciar, escribir y leer sesión</h2>
+<pre class="ejemplo">
+&lt;?php
+// Iniciar la sesión (debe ir antes de cualquier echo/HTML)
+session_start();
+
+// Escribir valores
+$_SESSION['user_id'] = 123;
+$_SESSION['usuario'] = 'Pablo';
+$_SESSION['rol']     = 'admin';
+
+// Leer valores
+echo $_SESSION['usuario']; // Pablo
+?&gt;
+</pre>
+
+<h2>¿Cómo verifico si la sesión está abierta?</h2>
+
+<h3>1) Con <code>session_status()</code> (recomendado)</h3>
+<pre class="ejemplo">
+&lt;?php
+if (session_status() === PHP_SESSION_ACTIVE) {
+  echo "La sesión está abierta ✅";
+} else {
+  echo "No hay sesión activa ❌";
+}
+?&gt;
+</pre>
+
+<h3>2) Comprobando <code>session_id()</code> (tras intentar abrirla)</h3>
+<pre class="ejemplo">
+&lt;?php
+session_start();               // intenta abrir/crear sesión
+if (session_id() !== "") {
+  echo "Hay una sesión activa ✅";
+} else {
+  echo "No hay sesión activa ❌";
+}
+?&gt;
+</pre>
+
+<h3>3) Revisando si hay variables en <code>$_SESSION</code></h3>
+<pre class="ejemplo">
+&lt;?php
+session_start();
+if (!empty($_SESSION)) {
+  echo "Sesión abierta y con datos:";
+  var_dump($_SESSION);
+} else {
+  echo "No hay variables en la sesión.";
+}
+?&gt;
+</pre>
+
+<p>
+  <strong>Nota:</strong> el método 3 verifica que haya datos guardados, no solo que la sesión exista. Para saber si
+  la sesión está activa, preferí <code>session_status()</code>.
+</p>
+
+<h2>Destruir sesión (logout)</h2>
+<pre class="ejemplo">
+&lt;?php
+session_start();
+
+// Quitar variables
+session_unset();
+
+// Destruir la sesión en el servidor
+session_destroy();
+
+// (Opcional) Borrar cookie de sesión en el cliente
+if (ini_get("session.use_cookies")) {
+  $params = session_get_cookie_params();
+  setcookie(session_name(), '', time() - 42000,
+    $params["path"], $params["domain"],
+    $params["secure"], $params["httponly"]
+  );
+}
+
+// Redirigir al inicio (opcional)
+// header("Location: /");
+?&gt;
+</pre>
+
+<h2>Buenas prácticas y seguridad</h2>
+<ul>
+  <li>Invocá <code>session_start()</code> al comienzo del script (antes de cualquier salida).</li>
+  <li>Después de un login exitoso, regenerá el ID:
+    <code>session_regenerate_id(true)</code> (previene fijación de sesión).</li>
+  <li>No guardes contraseñas ni datos sensibles en texto plano dentro de la sesión.</li>
+  <li>Validá rol/permisos antes de páginas protegidas.</li>
+  <li>Cerrá sesión al salir (logout) y, si aplica, borrá la cookie de sesión.</li>
+</ul>
+
+<h2>Mini flujo de login (esquema de ejemplo)</h2>
+<pre class="ejemplo">
+&lt;?php
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $user = $_POST['usuario'] ?? '';
+  $pass = $_POST['clave']   ?? '';
+
+  // (Ejemplo simplificado; en producción: consultar BD + password_verify)
+  if ($user === 'admin' &amp;&amp; $pass === '1234') {
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = 1;
+    $_SESSION['usuario'] = $user;
+    $_SESSION['rol']     = 'admin';
+    echo "Login OK ✅";
+  } else {
+    echo "Credenciales inválidas ❌";
+  }
+}
+?&gt;
+</pre>
+
+<h2>Tabla comparativa: $_SESSION vs $_COOKIE</h2>
+<table>
+  <tr>
+    <th>Aspecto</th>
+    <th>$_SESSION</th>
+    <th>$_COOKIE</th>
+  </tr>
+  <tr>
+    <td>Ubicación de datos</td>
+    <td>Servidor</td>
+    <td>Navegador del usuario</td>
+  </tr>
+  <tr>
+    <td>Transmisión</td>
+    <td>No viajan los datos en cada request</td>
+    <td>Se envían en cada request al servidor</td>
+  </tr>
+  <tr>
+    <td>Seguridad</td>
+    <td>Más seguro por defecto (no expone datos)</td>
+    <td>Requiere cuidado; visible y manipulable en cliente</td>
+  </tr>
+  <tr>
+    <td>Uso típico</td>
+    <td>Login, carrito, estado por usuario</td>
+    <td>Preferencias, recordar idioma/tema</td>
+  </tr>
+</table>
+
+<h2>Atajos útiles</h2>
+<ul>
+  <li><code>session_name()</code>: nombre de la sesión (cookie).</li>
+  <li><code>session_get_cookie_params()</code>: parámetros de la cookie de sesión.</li>
+  <li><code>ini_get('session.save_path')</code>: directorio donde se guardan archivos de sesión.</li>
+</ul>
+<a href="#indice">Volver</a>
+
+<h2 id="files">Superglobal $_FILES[...]</h2>
+
+<p>
+  <strong>$_FILES</strong> es una superglobal que contiene la información de los archivos
+  subidos mediante un formulario con <code>method="post"</code> y
+  <code>enctype="multipart/form-data"</code>. Cada input de tipo <code>file</code> genera
+  una entrada en <code>$_FILES</code>.
+</p>
+
+<h2>¿Qué contiene $_FILES?</h2>
+<p>Para un input <code>&lt;input type="file" name="foto"&gt;</code>, se obtiene:</p>
+
+<table>
+  <tr><th>Índice</th><th>Descripción</th><th>Ejemplo</th></tr>
+  <tr><td><code>$_FILES['foto']['name']</code></td><td>Nombre original del archivo</td><td>avatar.png</td></tr>
+  <tr><td><code>$_FILES['foto']['type']</code></td><td>Tipo MIME (según el navegador)</td><td>image/png</td></tr>
+  <tr><td><code>$_FILES['foto']['size']</code></td><td>Tamaño en bytes</td><td>34567</td></tr>
+  <tr><td><code>$_FILES['foto']['tmp_name']</code></td><td>Ruta temporal en el servidor</td><td>/tmp/php7aBcDe</td></tr>
+  <tr><td><code>$_FILES['foto']['error']</code></td><td>Código de error</td><td>0 (éxito)</td></tr>
+</table>
+
+<h2>Formulario de ejemplo (POST + multipart)</h2>
+<pre class="ejemplo">
+&lt;form action="subir.php" method="post" enctype="multipart/form-data"&gt;
+  &lt;label&gt;Seleccioná una imagen:&lt;/label&gt;
+  &lt;input type="file" name="foto" accept="image/*"&gt;
+  &lt;button type="submit"&gt;Subir&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+
+<h2>PHP básico para recibir el archivo</h2>
+<pre class="ejemplo">
+&lt;?php
+// subir.php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if (isset($_FILES['foto']) &amp;&amp; $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+    $tmp  = $_FILES['foto']['tmp_name'];
+    $name = basename($_FILES['foto']['name']); // OJO: sanitizar
+    $dest = __DIR__ . '/uploads/' . $name;
+
+    // Crear carpeta si no existe
+    if (!is_dir(__DIR__ . '/uploads')) {
+      mkdir(__DIR__ . '/uploads', 0775, true);
+    }
+
+    if (move_uploaded_file($tmp, $dest)) {
+      echo "✅ Archivo subido a: " . $dest;
+    } else {
+      echo "❌ No se pudo mover el archivo.";
+    }
+  } else {
+    echo "❌ Error en la subida: " . ($_FILES['foto']['error'] ?? 'sin archivo');
+  }
+}
+?&gt;
+</pre>
+
+<h2>Validaciones recomendadas</h2>
+<pre class="ejemplo">
+&lt;?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $maxBytes = 2 * 1024 * 1024; // 2 MB
+  $permitidos = ['image/jpeg','image/png','image/gif'];
+
+  if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
+    die("Error en la carga.");
+  }
+
+  // Tamaño
+  if ($_FILES['foto']['size'] &gt; $maxBytes) {
+    die("Archivo demasiado grande (máx 2MB).");
+  }
+
+  // Tipo MIME (verificación doble: MIME + extensión)
+  $finfo = new finfo(FILEINFO_MIME_TYPE);
+  $mime = $finfo->file($_FILES['foto']['tmp_name']);
+  if (!in_array($mime, $permitidos, true)) {
+    die("Tipo no permitido.");
+  }
+
+  // Nombre seguro (evitar rutas y caracteres raros)
+  $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
+  $nombreSeguro = bin2hex(random_bytes(8)) . '.' . strtolower($ext);
+
+  $dest = __DIR__ . '/uploads/' . $nombreSeguro;
+  if (!is_dir(__DIR__ . '/uploads')) mkdir(__DIR__ . '/uploads', 0775, true);
+
+  if (move_uploaded_file($_FILES['foto']['tmp_name'], $dest)) {
+    echo "Subido como: " . htmlspecialchars($nombreSeguro);
+  } else {
+    echo "No se pudo guardar el archivo.";
+  }
+}
+?&gt;
+</pre>
+
+<h2>Códigos de error comunes en $_FILES['campo']['error']</h2>
+<table>
+  <tr><th>Constante</th><th>Valor</th><th>Significado</th></tr>
+  <tr><td><code>UPLOAD_ERR_OK</code></td><td>0</td><td>Éxito</td></tr>
+  <tr><td><code>UPLOAD_ERR_INI_SIZE</code></td><td>1</td><td>Excede <code>upload_max_filesize</code> de php.ini</td></tr>
+  <tr><td><code>UPLOAD_ERR_FORM_SIZE</code></td><td>2</td><td>Excede <code>MAX_FILE_SIZE</code> del formulario</td></tr>
+  <tr><td><code>UPLOAD_ERR_PARTIAL</code></td><td>3</td><td>Archivo subido parcialmente</td></tr>
+  <tr><td><code>UPLOAD_ERR_NO_FILE</code></td><td>4</td><td>No se subió archivo</td></tr>
+  <tr><td><code>UPLOAD_ERR_NO_TMP_DIR</code></td><td>6</td><td>Falta carpeta temporal</td></tr>
+  <tr><td><code>UPLOAD_ERR_CANT_WRITE</code></td><td>7</td><td>Error al escribir en disco</td></tr>
+  <tr><td><code>UPLOAD_ERR_EXTENSION</code></td><td>8</td><td>Extensión de PHP detuvo la subida</td></tr>
+</table>
+
+<h2>Ajustes del servidor (php.ini) a considerar</h2>
+<ul>
+  <li><code>file_uploads = On</code> (habilita subidas).</li>
+  <li><code>upload_max_filesize</code> (tamaño máx. por archivo, ej. <code>8M</code>).</li>
+  <li><code>post_max_size</code> (límite total del POST; debe ser ≥ <code>upload_max_filesize</code>).</li>
+  <li><code>max_file_uploads</code> (máximo de archivos por request).</li>
+  <li><code>upload_tmp_dir</code> (directorio temporal).</li>
+</ul>
+
+<h2>Buenas prácticas</h2>
+<ul>
+  <li>Usar siempre <code>enctype="multipart/form-data"</code> en el formulario.</li>
+  <li>Validar tamaño, tipo MIME y extensión.</li>
+  <li>Renombrar el archivo (ID aleatorio) y guardar fuera de <code>public_html</code> si es posible.</li>
+  <li>Usar <code>move_uploaded_file()</code> (no <code>rename()</code>).</li>
+  <li>Nunca confiar solo en <code>$_FILES['type']</code>; validar con <code>finfo</code>.</li>
+  <li>Limitar tipos permitidos (lista blanca).</li>
+</ul>
+<a href="#indice">Volver</a>
+<h2 id="server">Superglobal $_SERVER[...]</h2>
+
+<p>
+  <strong>$_SERVER</strong> es un array asociativo que contiene información sobre <em>la petición HTTP</em>, 
+  el <em>servidor</em> y el <em>entorno de ejecución</em>. Incluye datos como el método de la request, la URL, 
+  cabeceras, IP del cliente, nombre del host, ruta del script, etc.
+</p>
+
+<div class="nota">
+  <strong>Importante:</strong> algunos índices pueden variar según el servidor (Apache, Nginx, CGI, FPM) 
+  o proxies/reverse proxies. No asumas que todos existen siempre; comprobá con <code>isset()</code>.
+</div>
+
+<h2>Índices comunes de $_SERVER</h2>
+<table>
+  <tr><th>Índice</th><th>Descripción</th><th>Ejemplo</th></tr>
+  <tr>
+    <td><code>$_SERVER['REQUEST_METHOD']</code></td>
+    <td>Método HTTP utilizado</td>
+    <td>GET / POST</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['REQUEST_URI']</code></td>
+    <td>Ruta solicitada (con query string)</td>
+    <td>/productos/listar?page=2</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['QUERY_STRING']</code></td>
+    <td>Cadena de consulta (parte después de <code>?</code>)</td>
+    <td>page=2&amp;orden=asc</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['HTTP_HOST']</code></td>
+    <td>Host enviado por el cliente</td>
+    <td>example.com</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['HTTP_USER_AGENT']</code></td>
+    <td>User-Agent del navegador/cliente</td>
+    <td>Mozilla/5.0 ...</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['HTTPS']</code></td>
+    <td>Presente si la conexión es HTTPS (depende del servidor)</td>
+    <td>on / 1</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['REMOTE_ADDR']</code></td>
+    <td>IP del cliente (ojo con proxies)</td>
+    <td>203.0.113.25</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['SERVER_NAME']</code></td>
+    <td>Nombre del servidor</td>
+    <td>example.com</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['SERVER_ADDR']</code></td>
+    <td>IP del servidor</td>
+    <td>192.0.2.10</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['SERVER_PROTOCOL']</code></td>
+    <td>Protocolo</td>
+    <td>HTTP/1.1, HTTP/2</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['SCRIPT_NAME']</code></td>
+    <td>Ruta del script ejecutado</td>
+    <td>/public/index.php</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER['DOCUMENT_ROOT']</code></td>
+    <td>Raíz del documento del servidor</td>
+    <td>/var/www/html</td>
+  </tr>
+</table>
+
+<h2>Detectar método, URL y protocolo</h2>
+<pre class="ejemplo">
+&lt;?php
+$metodo   = $_SERVER['REQUEST_METHOD'] ?? '';
+$uri      = $_SERVER['REQUEST_URI']    ?? '';
+$protocolo= $_SERVER['SERVER_PROTOCOL'] ?? '';
+echo "Método: $metodo\nURI: $uri\nProtocolo: $protocolo";
+?&gt;
+</pre>
+
+<h2>¿La conexión es HTTPS?</h2>
+<pre class="ejemplo">
+&lt;?php
+$esHttps = false;
+
+if (!empty($_SERVER['HTTPS']) &amp;&amp; $_SERVER['HTTPS'] !== 'off') {
+  $esHttps = true;
+}
+// Detrás de proxy/reverse proxy:
+if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &amp;&amp; $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+  $esHttps = true;
+}
+
+echo $esHttps ? "Conexión segura (HTTPS)" : "Conexión no segura (HTTP)";
+?&gt;
+</pre>
+
+<h2>Obtener IP del cliente (considerando proxies)</h2>
+<pre class="ejemplo">
+&lt;?php
+function ipCliente(): string {
+  $cabeceras = [
+    'HTTP_CLIENT_IP',
+    'HTTP_X_FORWARDED_FOR',
+    'HTTP_X_FORWARDED',
+    'HTTP_X_CLUSTER_CLIENT_IP',
+    'HTTP_FORWARDED_FOR',
+    'HTTP_FORWARDED',
+    'REMOTE_ADDR'
+  ];
+  foreach ($cabeceras as $h) {
+    if (!empty($_SERVER[$h])) {
+      // X-Forwarded-For puede traer una lista de IPs
+      $ips = explode(',', $_SERVER[$h]);
+      foreach ($ips as $ip) {
+        $ip = trim($ip);
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+          return $ip;
+        }
+      }
+    }
+  }
+  return 'desconocida';
+}
+
+echo "IP cliente: " . ipCliente();
+?&gt;
+</pre>
+
+<h2>Leer cabeceras HTTP</h2>
+<pre class="ejemplo">
+&lt;?php
+// Si está disponible:
+if (function_exists('getallheaders')) {
+  $headers = getallheaders();
+  foreach ($headers as $k =&gt; $v) {
+    echo $k . ': ' . $v . "\n";
+  }
+} else {
+  // Alternativa: recorrer $_SERVER con prefijo HTTP_
+  foreach ($_SERVER as $k =&gt; $v) {
+    if (strpos($k, 'HTTP_') === 0) {
+      echo $k . ': ' . $v . "\n";
+    }
+  }
+}
+?&gt;
+</pre>
+
+<h2>Construir la URL completa actual</h2>
+<pre class="ejemplo">
+&lt;?php
+$esHttps = (!empty($_SERVER['HTTPS']) &amp;&amp; $_SERVER['HTTPS'] !== 'off') 
+           || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+$scheme = $esHttps ? 'https' : 'http';
+$host   = $_SERVER['HTTP_HOST']       ?? 'localhost';
+$uri    = $_SERVER['REQUEST_URI']     ?? '/';
+
+$urlActual = $scheme . '://' . $host . $uri;
+echo $urlActual;
+?&gt;
+</pre>
+
+<h2>Ruta del script y document root</h2>
+<pre class="ejemplo">
+&lt;?php
+$script = $_SERVER['SCRIPT_NAME']   ?? '';
+$root   = $_SERVER['DOCUMENT_ROOT'] ?? '';
+echo "SCRIPT_NAME: $script\nDOCUMENT_ROOT: $root";
+?&gt;
+</pre>
+
+<h2>Buenas prácticas</h2>
+<ul>
+  <li>Comprobá existencia de índices con <code>isset()</code> o el operador null-coalescing <code>??</code>.</li>
+  <li>Detrás de proxies, preferí cabeceras estándar (ej. <code>X-Forwarded-For</code>, <code>X-Forwarded-Proto</code>) configuradas por tu proxy.</li>
+  <li>No confíes ciegamente en <code>$_SERVER['HTTP_*']</code>: pueden ser manipuladas por el cliente si tu proxy/servidor no las filtra.</li>
+  <li>Usá HTTPS siempre que sea posible; forzalo con redirecciones y cabeceras HSTS.</li>
+</ul>
+<a href="#indice">Volver</a>
+<h2 id="env">Superglobal $_ENV[...]</h2>
+
+<p>
+  La superglobal <code>$_ENV</code> contiene variables de entorno disponibles para el script PHP.  
+  Estas variables suelen provenir del <strong>sistema operativo</strong>, de la configuración de <code>php.ini</code> 
+  o de archivos de configuración externos (por ejemplo, un <code>.env</code> en frameworks modernos).
+</p>
+
+<div class="nota">
+  <strong>Tip:</strong> Aunque podés usar <code>$_ENV</code> directamente, en muchos servidores 
+  las variables de entorno también están disponibles mediante <code>getenv()</code>.
+</div>
+
+<h2>Ejemplo de lectura de $_ENV</h2>
+<pre class="ejemplo">
+&lt;?php
+// Acceder a una variable de entorno
+echo $_ENV['PATH'];
+
+// O usando getenv()
+echo getenv('PATH');
+?&gt;
+</pre>
+
+<h2>Definir variables de entorno</h2>
+<ul>
+  <li><strong>En Linux/macOS</strong>: <code>export MI_VAR=hola</code></li>
+  <li><strong>En Windows (CMD)</strong>: <code>set MI_VAR=hola</code></li>
+  <li><strong>En php.ini</strong>: <code>env[MI_VAR] = hola</code></li>
+</ul>
+
+<h2>Ejemplo práctico</h2>
+<pre class="ejemplo">
+&lt;?php
+// Archivo de configuración
+$_ENV['DB_HOST'] = "localhost";
+$_ENV['DB_USER'] = "root";
+$_ENV['DB_PASS'] = "secreto";
+
+// Uso en conexión
+$host = $_ENV['DB_HOST'];
+$user = $_ENV['DB_USER'];
+$pass = $_ENV['DB_PASS'];
+
+echo "Conectando a la BD en $host con usuario $user";
+?&gt;
+</pre>
+
+<h2>Ventajas de usar $_ENV</h2>
+<ul>
+  <li>Separación entre código y configuración.</li>
+  <li>No exponer contraseñas ni claves API en el repositorio.</li>
+  <li>Permite cambiar parámetros según el entorno (desarrollo, testing, producción).</li>
+</ul>
+
+<h2>Comparación con otras superglobales</h2>
+<table>
+  <tr><th>Superglobal</th><th>Fuente</th><th>Uso común</th></tr>
+  <tr>
+    <td><code>$_ENV</code></td>
+    <td>Variables de entorno del sistema/servidor</td>
+    <td>Configurar BD, API keys, rutas</td>
+  </tr>
+  <tr>
+    <td><code>$_SERVER</code></td>
+    <td>Info del servidor y de la petición</td>
+    <td>Método HTTP, cabeceras, ruta del script</td>
+  </tr>
+  <tr>
+    <td><code>$_COOKIE</code></td>
+    <td>Datos almacenados en el navegador</td>
+    <td>Preferencias, recordar usuario</td>
+  </tr>
+  <tr>
+    <td><code>$_SESSION</code></td>
+    <td>Datos guardados en el servidor por usuario</td>
+    <td>Login, carrito de compras</td>
+  </tr>
+</table>
+<a href="#indice">Volver</a>
+
+<h2 id="globals">Superglobal $GLOBALS[...] </h2>
+
+<p>
+  La superglobal <code>$GLOBALS</code> es un <strong>array asociativo</strong> que contiene todas las 
+  variables definidas en el ámbito global del script PHP.  
+  Permite acceder a variables globales desde funciones o métodos sin necesidad de usar la palabra clave 
+  <code>global</code>.
+</p>
+
+<div class="nota">
+  <strong>Tip:</strong> Usá <code>$GLOBALS</code> con cuidado. Si bien puede ser útil para 
+  debugging o casos puntuales, abusar de variables globales dificulta el mantenimiento del código.
+</div>
+
+<h2>Ejemplo básico</h2>
+<pre class="ejemplo">
+&lt;?php
+$numero = 42;
+
+function mostrarNumero() {
+  echo $GLOBALS['numero']; // Accede a $numero desde dentro de la función
+}
+
+mostrarNumero(); // 42
+?&gt;
+</pre>
+
+<h2>Comparación con usar <code>global</code></h2>
+<pre class="ejemplo">
+&lt;?php
+$mensaje = "Hola mundo";
+
+// Usando global
+function ejemplo1() {
+  global $mensaje;
+  echo $mensaje;
+}
+
+// Usando $GLOBALS
+function ejemplo2() {
+  echo $GLOBALS['mensaje'];
+}
+
+ejemplo1(); // Hola mundo
+ejemplo2(); // Hola mundo
+?&gt;
+</pre>
+
+<h2>Uso típico</h2>
+<ul>
+  <li>Acceder a variables globales dentro de funciones.</li>
+  <li>Depurar el estado global del script (ej: <code>var_dump($GLOBALS)</code>).</li>
+  <li>Casos puntuales donde se requiera compartir valores sin pasarlos como parámetros.</li>
+</ul>
+
+<h2>Ejemplo de depuración con $GLOBALS</h2>
+<pre class="ejemplo">
+&lt;?php
+$usuario = "Pablo";
+$rol     = "admin";
+
+var_dump($GLOBALS);
+/*
+array( ... ) {
+  ["usuario"] =&gt; string(5) "Pablo"
+  ["rol"] =&gt; string(5) "admin"
+  ["GLOBALS"] =&gt; &amp;array(...) // referencia a sí mismo
+}
+*/
+?&gt;
+</pre>
+
+<h2>Tabla resumen</h2>
+<table>
+  <tr><th>Característica</th><th>Descripción</th></tr>
+  <tr>
+    <td>Tipo</td>
+    <td>Array asociativo</td>
+  </tr>
+  <tr>
+    <td>Clave</td>
+    <td>Nombre de la variable global (ej: <code>"usuario"</code>)</td>
+  </tr>
+  <tr>
+    <td>Valor</td>
+    <td>Contenido de la variable global</td>
+  </tr>
+  <tr>
+    <td>Alcance</td>
+    <td>Disponible en cualquier parte del script</td>
+  </tr>
+</table>
+<a href="#indice">VOLVER</a>
+
+
+
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+
+</footer>
+</body>
+</html>
