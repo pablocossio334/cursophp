@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PHP — Conexión a Base de Datos (PDO)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+ <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+<h1>Conexión a Base de Datos con PHP (PDO)</h1>
+
+<p>
+  <strong>PDO</strong> (PHP Data Objects) es la forma recomendada de conectarse a bases de datos en PHP. 
+  Ofrece una interfaz consistente para distintos motores (MySQL/MariaDB, PostgreSQL, SQLite, etc.), 
+  soporte de <em>prepared statements</em> y manejo de errores robusto.
+</p>
+
+<h2>Índice</h2>
+<ul class="toc">
+  <li><a href="#dsn">DSN (cadena de conexión) por motor</a></li>
+  <li><a href="#conexion-mysql">Conexión a MySQL/MariaDB</a></li>
+  <li><a href="#conexion-pg">Conexión a PostgreSQL</a></li>
+  <li><a href="#conexion-sqlite">Conexión a SQLite</a></li>
+  <li><a href="#consulta">Probar la conexión con una consulta</a></li>
+  <li><a href="#errores">Manejo de errores (try/catch)</a></li>
+  <li><a href="#buenas">Buenas prácticas</a></li>
+  <li><a href="#problemas">Problemas comunes</a></li>
+</ul>
+
+<h2 id="dsn">DSN (cadena de conexión) por motor</h2>
+<table>
+  <tr><th>Motor</th><th>Ejemplo DSN</th><th>Notas</th></tr>
+  <tr>
+    <td>MySQL / MariaDB</td>
+    <td><code>mysql:host=localhost;dbname=miapp;charset=utf8mb4</code></td>
+    <td>Usar <code>utf8mb4</code> para soportar todos los caracteres (emojis, etc.).</td>
+  </tr>
+  <tr>
+    <td>PostgreSQL</td>
+    <td><code>pgsql:host=localhost;port=5432;dbname=miapp</code></td>
+    <td>El charset se configura con <code>SET NAMES</code> o al crear la BD.</td>
+  </tr>
+  <tr>
+    <td>SQLite</td>
+    <td><code>sqlite:/ruta/absoluta/miapp.sqlite</code></td>
+    <td>BD basada en archivo. Asegurar permisos de escritura/lectura.</td>
+  </tr>
+</table>
+
+<h2 id="conexion-mysql">Conexión a MySQL/MariaDB (PDO)</h2>
+<pre class="ejemplo">
+&lt;?php
+declare(strict_types=1);
+
+$dsn  = 'mysql:host=localhost;dbname=miapp;charset=utf8mb4';
+$user = 'usuario_app';
+$pass = 'secreto';
+
+try {
+  $pdo = new PDO($dsn, $user, $pass, [
+    PDO::ATTR_ERRMODE            =&gt; PDO::ERRMODE_EXCEPTION,  // Excepciones en errores
+    PDO::ATTR_DEFAULT_FETCH_MODE =&gt; PDO::FETCH_ASSOC,        // fetch como array asociativo
+    PDO::ATTR_EMULATE_PREPARES   =&gt; false,                   // prepared reales
+  ]);
+
+  echo "✅ Conectado a MySQL/MariaDB";
+} catch (PDOException $e) {
+  // No exponer credenciales ni DSN en producción
+  echo "❌ Error de conexión: " . $e->getMessage();
+}
+?&gt;
+</pre>
+
+<h2 id="conexion-pg">Conexión a PostgreSQL (PDO)</h2>
+<pre class="ejemplo">
+&lt;?php
+$dsn  = 'pgsql:host=localhost;port=5432;dbname=miapp';
+$user = 'usuario_app';
+$pass = 'secreto';
+
+try {
+  $pdo = new PDO($dsn, $user, $pass, [
+    PDO::ATTR_ERRMODE =&gt; PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE =&gt; PDO::FETCH_ASSOC,
+  ]);
+  // Charset (opcional): $pdo-&gt;exec("SET NAMES 'UTF8'");
+  echo "✅ Conectado a PostgreSQL";
+} catch (PDOException $e) {
+  echo "❌ Error de conexión: " . $e->getMessage();
+}
+?&gt;
+</pre>
+
+<h2 id="conexion-sqlite">Conexión a SQLite (PDO)</h2>
+<pre class="ejemplo">
+&lt;?php
+$dsn = 'sqlite:' . __DIR__ . '/data/miapp.sqlite';
+
+try {
+  $pdo = new PDO($dsn, null, null, [
+    PDO::ATTR_ERRMODE =&gt; PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE =&gt; PDO::FETCH_ASSOC,
+  ]);
+  echo "✅ Conectado a SQLite";
+} catch (PDOException $e) {
+  echo "❌ Error de conexión: " . $e->getMessage();
+}
+?&gt;
+</pre>
+
+<h2 id="consulta">Probar la conexión con una consulta</h2>
+<p>Ejemplo de <em>SELECT</em> con <strong>prepared statement</strong> (seguro contra inyección SQL):</p>
+<pre class="ejemplo">
+&lt;?php
+// Suponiendo $pdo conectado
+$stmt = $pdo-&gt;prepare('SELECT id, nombre, email FROM usuarios WHERE id = :id');
+$stmt-&gt;execute([':id' =&gt; 1]);
+$usuario = $stmt-&gt;fetch();
+
+if ($usuario) {
+  echo "Usuario: " . $usuario['nombre'] . " (" . $usuario['email'] . ")";
+} else {
+  echo "No se encontró el usuario";
+}
+?&gt;
+</pre>
+
+<h2 id="errores">Manejo de errores (try/catch)</h2>
+<p>Siempre usá <code>try/catch</code> y <code>PDO::ERRMODE_EXCEPTION</code> para capturar errores correctamente.</p>
+<pre class="ejemplo">
+&lt;?php
+try {
+  $pdo-&gt;beginTransaction();
+
+  $stmt = $pdo-&gt;prepare('INSERT INTO usuarios (nombre, email) VALUES (:n, :e)');
+  $stmt-&gt;execute([':n' =&gt; 'Pablo', ':e' =&gt; 'pablo@mail.com']);
+
+  $pdo-&gt;commit();
+  echo "✅ Insert ok";
+} catch (Throwable $ex) {
+  $pdo-&gt;rollBack();
+  // Log real: error_log($ex-&gt;getMessage());
+  echo "❌ Ocurrió un error. Intente de nuevo.";
+}
+?&gt;
+</pre>
+
+<h2 id="buenas">Buenas prácticas</h2>
+<ul>
+  <li><strong>PDO</strong> + <strong>prepared statements</strong> (nunca concatenes variables en SQL).</li>
+  <li><strong>UTF-8/utf8mb4</strong> para texto (evita problemas de caracteres).</li>
+  <li>Credenciales en <strong>variables de entorno</strong> o configuraciones fuera del repositorio (no en el código).</li>
+  <li>Usuario de BD con <strong>mínimos privilegios</strong> (no <code>root</code> para la app).</li>
+  <li>Manejo de errores con <strong>excepciones</strong> y <strong>logs</strong>; no mostrar detalles sensibles al usuario.</li>
+  <li>Transacciones para operaciones múltiples que deben ser atómicas.</li>
+</ul>
+
+<h2 id="problemas">Problemas comunes</h2>
+<table>
+  <tr><th>Problema</th><th>Causa probable</th><th>Solución</th></tr>
+  <tr>
+    <td><code>could not find driver</code></td>
+    <td>Extensión PDO del motor no habilitada</td>
+    <td>Activar <code>pdo_mysql</code> / <code>pdo_pgsql</code> / <code>pdo_sqlite</code> en <code>php.ini</code> y reiniciar el servidor</td>
+  </tr>
+  <tr>
+    <td>Caracteres raros</td>
+    <td>Charset no configurado</td>
+    <td>Usar <code>charset=utf8mb4</code> (MySQL) o <code>SET NAMES 'UTF8'</code> (PostgreSQL)</td>
+  </tr>
+  <tr>
+    <td>Permisos denegados</td>
+    <td>Usuario/rol sin permisos para la DB</td>
+    <td>Otorgar permisos mínimos requeridos (SELECT/INSERT/UPDATE/DELETE)</td>
+  </tr>
+  <tr>
+    <td>Timeout / No conecta</td>
+    <td>Host/puerto incorrectos o servicio caído</td>
+    <td>Verificar DNS/puerto, firewall y que MySQL/PG esté iniciado</td>
+  </tr>
+</table>
+
+<div class="nota">
+  <strong>Resumen:</strong> Conectar con PDO, usar prepared statements, definir el charset y manejar errores con excepciones 
+  son la base de una conexión segura y estable en PHP.
+</div>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+</footer>
+</body>
+</html>

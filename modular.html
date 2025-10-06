@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>PHP — Estructura por secciones (header.php, menu.php, aside.php)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+<header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+<h1>Estructura modular de páginas en PHP</h1>
+
+<p>
+  Separar la vista en archivos reutilizables como <code>header.php</code>, <code>menu.php</code>, 
+  <code>aside.php</code> y <code>footer.php</code> mejora la <strong>organización</strong>, la 
+  <strong>reutilización</strong> y el <strong>mantenimiento</strong> del proyecto.
+</p>
+
+<h2>Índice</h2>
+<ul class="toc">
+  <li><a href="#estructura">Estructura de carpetas sugerida</a></li>
+  <li><a href="#porque">¿Por qué es buena práctica?</a></li>
+  <li><a href="#index">index.php (maquetador principal)</a></li>
+  <li><a href="#partials">Ejemplos de partials: header, menu, aside, footer</a></li>
+  <li><a href="#includes">include vs require (y _once)</a></li>
+  <li><a href="#paths">Rutas seguras (constantes y __DIR__)</a></li>
+  <li><a href="#variables">Pasar variables a los partials</a></li>
+  <li><a href="#errores">Errores comunes y consejos</a></li>
+</ul>
+
+<h2 id="estructura">Estructura de carpetas sugerida</h2>
+<pre class="ejemplo">
+/mi-sitio
+  /public
+    index.php
+    estilos.css
+  /views
+    /partials
+      header.php
+      menu.php
+      aside.php
+      footer.php
+    home.php
+    about.php
+    contact.php
+  /config
+    paths.php
+</pre>
+
+<h2 id="porque">¿Por qué es buena práctica?</h2>
+<table>
+  <tr><th>Ventaja</th><th>Descripción</th></tr>
+  <tr><td>Reutilización</td><td>El mismo encabezado/menú se usa en todas las páginas.</td></tr>
+  <tr><td>Mantenimiento</td><td>Un cambio en un partial se refleja en todo el sitio.</td></tr>
+  <tr><td>Orden</td><td>Código más limpio y archivos más cortos.</td></tr>
+  <tr><td>Escalabilidad</td><td>Facilita pasar a MVC/plantillas más adelante.</td></tr>
+</table>
+
+<h2 id="index">index.php (maquetador principal)</h2>
+<p>El archivo principal arma la página incluyendo partials y el contenido central según la ruta.</p>
+<pre class="ejemplo">
+&lt;?php
+declare(strict_types=1);
+
+require __DIR__ . '/../config/paths.php'; // define rutas BASE, VIEW_PATH, PARTIALS_PATH
+
+$page = $_GET['page'] ?? 'home';
+$viewFile = VIEW_PATH . "/{$page}.php";
+
+$title = ucfirst($page) . " | Mi Sitio"; // variable que usará el header
+
+require PARTIALS_PATH . '/header.php';
+require PARTIALS_PATH . '/menu.php';
+
+echo "&lt;main&gt;";
+if (is_file($viewFile)) {
+  require $viewFile;
+} else {
+  http_response_code(404);
+  echo "&lt;h2&gt;404 — Página no encontrada&lt;/h2&gt;";
+}
+echo "&lt;/main&gt;";
+
+require PARTIALS_PATH . '/aside.php';
+require PARTIALS_PATH . '/footer.php';
+?&gt;
+</pre>
+
+<h2 id="partials">Ejemplos de partials</h2>
+
+<h3>views/partials/header.php</h3>
+<pre class="ejemplo">
+&lt;?php
+// $title puede venir definido desde index.php
+$t = isset($title) ? htmlspecialchars($title, ENT_QUOTES, 'UTF-8') : 'Mi Sitio';
+?&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang="es"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;&lt;?= $t ?&gt;&lt;/title&gt;
+  &lt;link rel="stylesheet" href="/estilos.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;h1&gt;Mi Sitio&lt;/h1&gt;
+  &lt;/header&gt;
+</pre>
+
+<h3>views/partials/menu.php</h3>
+<pre class="ejemplo">
+&lt;nav&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href="/index.php?page=home"&gt;Inicio&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/index.php?page=about"&gt;About&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/index.php?page=contact"&gt;Contacto&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+</pre>
+
+<h3>views/partials/aside.php</h3>
+<pre class="ejemplo">
+&lt;aside&gt;
+  &lt;h3&gt;Novedades&lt;/h3&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Curso PHP — nuevas fechas&lt;/li&gt;
+    &lt;li&gt;Tips de seguridad web&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/aside&gt;
+</pre>
+
+<h3>views/partials/footer.php</h3>
+<pre class="ejemplo">
+&lt;footer&gt;
+  &lt;p&gt;© Pablo Cossio — Solo para uso educativo&lt;/p&gt;
+&lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<h3>views/home.php</h3>
+<pre class="ejemplo">
+&lt;section&gt;
+  &lt;h2&gt;Bienvenido&lt;/h2&gt;
+  &lt;p&gt;Este es el home del sitio.&lt;/p&gt;
+&lt;/section&gt;
+</pre>
+
+<h2 id="includes">include vs require (y _once)</h2>
+<table>
+  <tr><th>Función</th><th>Si falta el archivo</th><th>Uso típico</th></tr>
+  <tr><td><code>include</code></td><td>Emite warning y continúa</td><td>Partials no críticos</td></tr>
+  <tr><td><code>require</code></td><td><strong>Error fatal</strong> y detiene</td><td>Archivos esenciales (config, autoload, header)</td></tr>
+  <tr><td><code>include_once</code> / <code>require_once</code></td><td>Idem, pero asegura incluirlo una sola vez</td><td>Evitar redefinir funciones/clases</td></tr>
+</table>
+
+<div class="nota">
+  <strong>Recomendación:</strong> para layout y config usá <code>require</code>/<code>require_once</code>;
+  para piezas opcionales, <code>include</code>. Evitá incluir el mismo archivo más de una vez: preferí <code>_once</code>.
+</div>
+
+<h2 id="paths">Rutas seguras (constantes y __DIR__)</h2>
+<p>Definí rutas absolutas en un archivo de configuración para evitar problemas de “ruta relativa”.</p>
+<pre class="ejemplo">
+&lt;?php
+// /config/paths.php
+define('BASE_PATH', realpath(__DIR__ . '/..'));
+define('VIEW_PATH', BASE_PATH . '/views');
+define('PARTIALS_PATH', VIEW_PATH . '/partials');
+?&gt;
+</pre>
+
+<h2 id="variables">Pasar variables a los partials</h2>
+<p>Los partials comparten el ámbito del script que los incluye. Podés “inyectar” variables antes del <em>require</em>.</p>
+<pre class="ejemplo">
+&lt;?php
+$title = "About | Mi Sitio";
+$usuario = "Pablo";
+require PARTIALS_PATH . '/header.php';
+?&gt;
+
+&lt;!-- dentro de header.php podrías usar $title y en menu.php, $usuario si lo necesitás --&gt;
+</pre>
+
+<h2 id="errores">Errores comunes y consejos</h2>
+<ul>
+  <li><strong>Duplicar includes</strong>: produce HTML repetido o errores de redefinición → usar <code>_once</code>.</li>
+  <li><strong>Rutas relativas frágiles</strong>: preferir <code>__DIR__</code> y constantes de paths.</li>
+  <li><strong>HTML mal cerrado</strong>: asegurate de que <code>&lt;header&gt;...&lt;/header&gt;</code> y <code>&lt;body&gt;...&lt;/body&gt;</code> se abran/cierren en el orden correcto (generalmente header abre <code>&lt;html&gt;&lt;head&gt;&lt;body&gt;</code> y footer los cierra).</li>
+  <li><strong>Mezclar lógica y vista</strong>: mantené los partials para presentación; la lógica de negocio en otra capa/archivo.</li>
+  <li><strong>Inyección de vistas</strong>: validá el parámetro <code>page</code> contra una whitelist para evitar incluir archivos arbitrarios.</li>
+</ul>
+
+<div class="nota">
+  <strong>Resumen:</strong> Dividir la vista en partials (header, menú, aside, footer) mejora la calidad del proyecto.
+  Usá rutas absolutas, <code>require_once</code> para piezas críticas y mantené la lógica separada de la presentación.
+</div>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+</footer>
+</body>
+</html>
