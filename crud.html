@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>PHP — Mini CRUD con PDO (INSERT, LISTAR, DELETE)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px; line-height:1.6;}
+    h1{color:#222; text-align:center;}
+    h2{margin-top:28px;}
+    table{width:100%; border-collapse:collapse; margin-top:16px;}
+    th,td{border:1px solid #ccc; padding:10px; text-align:left; vertical-align:top;}
+    th{background:#333; color:#fff;}
+    tr:nth-child(even){background:#fafafa;}
+    code{background:#eee; padding:2px 6px; border-radius:4px;}
+    .ejemplo{background:#222; color:#0f0; padding:10px; border-radius:8px; white-space:pre; overflow:auto; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;}
+    .nota{background:#fff3cd; border:1px solid #ffeeba; padding:10px; border-radius:6px; margin-top:12px;}
+    .toc a{color:#0066cc; text-decoration:none;}
+    .toc li{margin:6px 0;}
+  </style>
+  <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+  <header>
+  <a href="index.html"><img src="./img/logo.png" alt=""></a>
+ 
+</header>
+
+
+<h1>Mini CRUD con PHP + PDO</h1>
+
+<p>
+  Ejemplo básico y seguro de <strong>INSERT</strong>, <strong>LISTAR</strong> y <strong>DELETE</strong> con PDO,
+  <em>prepared statements</em>, <strong>PRG</strong> y <strong>token CSRF</strong> para borrar.
+</p>
+
+<h2>Índice</h2>
+<ul class="toc">
+  <li><a href="#tabla">1) Tabla de ejemplo</a></li>
+  <li><a href="#estructura">2) Estructura de archivos</a></li>
+  <li><a href="#db">3) Conexión reusable (config/db.php)</a></li>
+  <li><a href="#form">4) Formulario de alta (form.html)</a></li>
+  <li><a href="#insert">5) Procesar alta (insert.php)</a></li>
+  <li><a href="#listar">6) Listado (list.php)</a></li>
+  <li><a href="#delete">7) Borrado seguro (delete.php)</a></li>
+  <li><a href="#tips">8) Buenas prácticas y notas</a></li>
+</ul>
+
+<h2 id="tabla">1) Tabla de ejemplo (MySQL/MariaDB)</h2>
+<pre class="ejemplo">
+-- Tabla 'usuarios'
+CREATE TABLE usuarios (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(80) NOT NULL,
+  email VARCHAR(120) NOT NULL UNIQUE,
+  creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+</pre>
+
+<h2 id="estructura">2) Estructura de archivos</h2>
+<pre class="ejemplo">
+/crud
+  config/
+    db.php
+  public/
+    form.html
+    insert.php
+    list.php
+    delete.php
+</pre>
+
+<h2 id="db">3) Conexión reusable (config/db.php)</h2>
+<pre class="ejemplo">
+&lt;?php
+// config/db.php
+declare(strict_types=1);
+
+function pdo(): PDO {
+  $dsn  = 'mysql:host=localhost;dbname=miapp;charset=utf8mb4';
+  $user = 'usuario_app';
+  $pass = 'secreto';
+  return new PDO($dsn, $user, $pass, [
+    PDO::ATTR_ERRMODE            =&gt; PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE =&gt; PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   =&gt; false,
+  ]);
+}
+?&gt;
+</pre>
+
+<h2 id="form">4) Formulario de alta (public/form.html)</h2>
+<pre class="ejemplo">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="es"&gt;
+&lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;Alta de usuario&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav&gt;
+    &lt;a href="form.html"&gt;Alta&lt;/a&gt; | 
+    &lt;a href="list.php"&gt;Listado&lt;/a&gt;
+  &lt;/nav&gt;
+
+  &lt;h1&gt;Alta de usuario&lt;/h1&gt;
+  &lt;form action="insert.php" method="post" autocomplete="off"&gt;
+    &lt;label&gt;Nombre&lt;/label&gt;
+    &lt;input type="text" name="nombre" required maxlength="80"&gt;
+
+    &lt;label&gt;Email&lt;/label&gt;
+    &lt;input type="email" name="email" required maxlength="120"&gt;
+
+    &lt;button type="submit"&gt;Guardar&lt;/button&gt;
+  &lt;/form&gt;
+
+  &lt;?php
+  // Mensaje flash por PRG
+  session_start();
+  if (!empty($_SESSION['flash'])) {
+    echo '&lt;p&gt;' . htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8') . '&lt;/p&gt;';
+    unset($_SESSION['flash']);
+  }
+  ?&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<h2 id="insert">5) Procesar alta (public/insert.php)</h2>
+<pre class="ejemplo">
+&lt;?php
+declare(strict_types=1);
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  http_response_code(405);
+  exit('Método no permitido');
+}
+
+$nombre = trim($_POST['nombre'] ?? '');
+$email  = trim($_POST['email'] ?? '');
+
+if ($nombre === '' || $email === '') {
+  $_SESSION['flash'] = 'Completá todos los campos.';
+  header('Location: form.html'); exit;
+}
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+  $_SESSION['flash'] = 'Email inválido.';
+  header('Location: form.html'); exit;
+}
+
+require __DIR__ . '/../config/db.php';
+
+try {
+  $pdo = pdo();
+  $stmt = $pdo-&gt;prepare('INSERT INTO usuarios (nombre, email) VALUES (:n, :e)');
+  $stmt-&gt;execute([':n' =&gt; $nombre, ':e' =&gt; $email]);
+
+  $_SESSION['flash'] = 'Usuario creado (ID: ' . (int)$pdo-&gt;lastInsertId() . ') ✅';
+} catch (PDOException $ex) {
+  if ((int)($ex-&gt;errorInfo[1] ?? 0) === 1062) {
+    $_SESSION['flash'] = 'El email ya existe.';
+  } else {
+    // error_log($ex-&gt;getMessage());
+    $_SESSION['flash'] = 'Ocurrió un error. Intente nuevamente.';
+  }
+}
+header('Location: form.html'); exit;
+?&gt;
+</pre>
+
+<h2 id="listar">6) Listado (public/list.php)</h2>
+<p>Lista todos los usuarios y ofrece un botón de borrado por <strong>POST</strong> con <strong>CSRF token</strong>.</p>
+<pre class="ejemplo">
+&lt;?php
+declare(strict_types=1);
+session_start();
+
+require __DIR__ . '/../config/db.php';
+$pdo = pdo();
+
+// Generar token CSRF si no existe
+if (empty($_SESSION['csrf'])) {
+  $_SESSION['csrf'] = bin2hex(random_bytes(16));
+}
+$csrf = $_SESSION['csrf'];
+
+// Paginación simple (opcional)
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = 10;
+$offset = ($page - 1) * $perPage;
+
+// Total y fetch
+$total = (int)$pdo-&gt;query('SELECT COUNT(*) FROM usuarios')-&gt;fetchColumn();
+$stmt  = $pdo-&gt;prepare('SELECT id, nombre, email, creado_en FROM usuarios ORDER BY id DESC LIMIT :lim OFFSET :off');
+$stmt-&gt;bindValue(':lim', $perPage, PDO::PARAM_INT);
+$stmt-&gt;bindValue(':off', $offset, PDO::PARAM_INT);
+$stmt-&gt;execute();
+$rows = $stmt-&gt;fetchAll();
+?&gt;
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang="es"&gt;
+&lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;Listado de usuarios&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav&gt;
+    &lt;a href="form.html"&gt;Alta&lt;/a&gt; | 
+    &lt;a href="list.php"&gt;Listado&lt;/a&gt;
+  &lt;/nav&gt;
+
+  &lt;h1&gt;Usuarios (<?= $total ?&gt;)&lt;/h1&gt;
+
+  &lt;?php
+  if (!empty($_SESSION['flash'])) {
+    echo '&lt;p&gt;' . htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8') . '&lt;/p&gt;';
+    unset($_SESSION['flash']);
+  }
+  ?&gt;
+
+  &lt;table border="1" cellpadding="6" cellspacing="0"&gt;
+    &lt;tr&gt;&lt;th>ID&lt;/th&gt;&lt;th&gt;Nombre&lt;/th&gt;&lt;th&gt;Email&lt;/th&gt;&lt;th&gt;Creado&lt;/th&gt;&lt;th&gt;Acciones&lt;/th&gt;&lt;/tr&gt;
+    &lt;?php foreach ($rows as $r): ?&gt;
+      &lt;tr&gt;
+        &lt;td&gt;&lt;?= (int)$r['id'] ?&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;?= htmlspecialchars($r['nombre'], ENT_QUOTES, 'UTF-8') ?&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;?= htmlspecialchars($r['email'], ENT_QUOTES, 'UTF-8') ?&gt;&lt;/td&gt;
+        &lt;td&gt;&lt;?= htmlspecialchars($r['creado_en'], ENT_QUOTES, 'UTF-8') ?&gt;&lt;/td&gt;
+        &lt;td&gt;
+          &lt;form action="delete.php" method="post" onsubmit="return confirm('¿Borrar usuario?');" style="display:inline"&gt;
+            &lt;input type="hidden" name="id" value="&lt;?= (int)$r['id'] ?&gt;"&gt;
+            &lt;input type="hidden" name="csrf" value="&lt;?= $csrf ?&gt;"&gt;
+            &lt;button type="submit"&gt;Borrar&lt;/button&gt;
+          &lt;/form&gt;
+        &lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;?php endforeach; ?&gt;
+  &lt;/table&gt;
+
+  &lt;!-- Paginación mínima --&gt;
+  &lt;div&gt;
+    &lt;?php
+      $pages = max(1, (int)ceil($total / $perPage));
+      for ($i=1; $i&lt;=$pages; $i++) {
+        echo ($i === $page) ? "&lt;strong&gt;$i&lt;/strong&gt; " : '&lt;a href="?page='.$i.'"&gt;'.$i.'&lt;/a&gt; ';
+      }
+    ?&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<h2 id="delete">7) Borrado seguro (public/delete.php)</h2>
+<p>Valida <strong>POST</strong>, <strong>token CSRF</strong> y el <strong>ID</strong> antes de borrar. Aplica <strong>PRG</strong>.</p>
+<pre class="ejemplo">
+&lt;?php
+declare(strict_types=1);
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  http_response_code(405);
+  exit('Método no permitido');
+}
+
+$id   = (int)($_POST['id'] ?? 0);
+$csrf = $_POST['csrf'] ?? '';
+
+if ($id &lt;= 0 || empty($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], $csrf)) {
+  $_SESSION['flash'] = 'Solicitud inválida.';
+  header('Location: list.php'); exit;
+}
+
+require __DIR__ . '/../config/db.php';
+
+try {
+  $pdo = pdo();
+  $stmt = $pdo-&gt;prepare('DELETE FROM usuarios WHERE id = :id');
+  $stmt-&gt;execute([':id' =&gt; $id]);
+
+  $_SESSION['flash'] = $stmt-&gt;rowCount() ? 'Usuario borrado ✅' : 'No se encontró el usuario.';
+} catch (Throwable $ex) {
+  // error_log($ex-&gt;getMessage());
+  $_SESSION['flash'] = 'No se pudo borrar. Intente nuevamente.';
+}
+
+header('Location: list.php'); exit;
+?&gt;
+</pre>
+
+<h2 id="tips">8) Buenas prácticas y notas</h2>
+<ul>
+  <li><strong>DELETE por POST</strong> (nunca por GET). Agregá <strong>CSRF token</strong> y confirmación.</li>
+  <li><strong>PRG</strong> tras INSERT y DELETE para evitar reenviar formularios con F5.</li>
+  <li><strong>Prepared statements</strong> siempre; no concatenes variables en SQL.</li>
+  <li>Escapá salida en HTML con <code>htmlspecialchars(..., ENT_QUOTES, 'UTF-8')</code>.</li>
+  <li>Usá <code>utf8mb4</code> y columnas en UTF-8 para evitar problemas de caracteres.</li>
+  <li>Centralizá la conexión en un archivo (como <code>config/db.php</code>).</li>
+</ul>
+
+<div class="nota">
+  <strong>Extensión:</strong> Para un CRUD completo, sumá <em>EDITAR/UPDATE</em> con un formulario que precargue datos y procese un <code>UPDATE ... WHERE id = :id</code> por POST con CSRF.
+</div>
+<footer>
+  © Copyright by Pablo Cossio — Solo para uso educativo
+</footer>
+</body>
+</html>
